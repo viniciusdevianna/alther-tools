@@ -1,0 +1,113 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#070b16">
+<title>Ferramentas de Alther</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #070b16;
+    --brass: #c9a35a;
+    --brass-hi: #ecd08e;
+    --brass-lo: #6e5525;
+    --line: rgba(201, 163, 90, 0.32);
+    --text: #e9e3d2;
+    --muted: #9a9cab;
+    --energy: #6fe3f5;
+    --display: "Cinzel", Georgia, serif;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; min-height: 100%; }
+  body {
+    background:
+      radial-gradient(ellipse at 50% -10%, rgba(201,163,90,0.14), transparent 55%),
+      radial-gradient(ellipse at 50% 120%, rgba(111,227,245,0.08), transparent 60%),
+      var(--bg);
+    color: var(--text);
+    font: 16px/1.5 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+    min-height: 100vh;
+  }
+  canvas#stars { position: fixed; inset: 0; width: 100%; height: 100%; z-index: 0; pointer-events: none; }
+  main { position: relative; z-index: 1; max-width: 860px; margin: 0 auto; padding: 64px 16px 48px; }
+  header { text-align: center; margin-bottom: 44px; }
+  .sigil {
+    width: 72px; height: 72px; margin: 0 auto 18px; border-radius: 50%;
+    border: 2px solid var(--brass); position: relative;
+    box-shadow: 0 0 0 5px rgba(201,163,90,0.1), 0 0 30px rgba(111,227,245,0.18);
+  }
+  .sigil::before, .sigil::after { content: ""; position: absolute; inset: 12px; border-radius: 50%; border: 1px solid var(--line); }
+  .sigil::after { inset: 28px; background: var(--energy); border: none; box-shadow: 0 0 16px var(--energy); }
+  h1 { font-family: var(--display); font-weight: 700; letter-spacing: 0.1em; color: var(--brass-hi); font-size: clamp(26px, 6vw, 40px); margin: 0; }
+  header p { color: var(--muted); margin: 8px 0 0; }
+
+  .tools { list-style: none; padding: 0; margin: 0; display: flex; flex-wrap: wrap; justify-content: center; gap: 18px; }
+  .tools li { flex: 0 1 300px; }
+  .tool {
+    display: flex; flex-direction: column; gap: 10px; height: 100%;
+    padding: 22px; border-radius: 16px; text-decoration: none; color: inherit;
+    background: linear-gradient(180deg, rgba(16,24,46,0.9), rgba(11,17,34,0.9));
+    border: 1px solid var(--brass-lo);
+    box-shadow: inset 0 0 0 1px rgba(236,208,142,0.1);
+    transition: transform 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
+    min-height: 180px;
+  }
+  .tool:hover, .tool:focus-visible {
+    transform: translateY(-3px); border-color: var(--brass);
+    box-shadow: inset 0 0 0 1px rgba(236,208,142,0.2), 0 10px 30px rgba(111,227,245,0.12);
+    outline: none;
+  }
+  .tool .icon { font-size: 30px; line-height: 1; color: var(--energy); text-shadow: 0 0 12px rgba(111,227,245,0.6); }
+  .tool h2 { font-family: var(--display); font-size: 19px; letter-spacing: 0.06em; color: var(--brass-hi); margin: 0; font-weight: 700; }
+  .tool p { margin: 0; color: #c7c8d2; font-size: 15px; flex: 1; }
+  .tool .go { font-family: var(--display); font-size: 13px; letter-spacing: 0.14em; color: var(--brass); }
+  footer { text-align: center; color: var(--muted); font-size: 13px; margin-top: 48px; }
+</style>
+</head>
+<body>
+<canvas id="stars" aria-hidden="true"></canvas>
+<main>
+  <header>
+    <div class="sigil" aria-hidden="true"></div>
+    <h1>Ferramentas de Alther</h1>
+    <p>Instrumentos para as sessões</p>
+  </header>
+
+  <ul class="tools">
+    <li>
+      <a class="tool" href="tools/mapa-navegacao/">
+        <span class="icon" aria-hidden="true">✦</span>
+        <h2>Mapa de Navegação</h2>
+        <p>O mapa esférico da nave para localizar universos e saltar entre eles.</p>
+        <span class="go">Abrir →</span>
+      </a>
+    </li>
+  </ul>
+
+  <footer>Alther</footer>
+</main>
+<script>
+  (() => {
+    const c = document.getElementById('stars');
+    const ctx = c.getContext('2d');
+    let seed = 11;
+    const rnd = () => (seed = (seed * 16807) % 2147483647) / 2147483647;
+    const stars = Array.from({ length: 180 }, () => ({ x: rnd(), y: rnd(), r: rnd() * 1.2 + 0.2, a: rnd() * 0.6 + 0.15 }));
+    function draw() {
+      const dpr = window.devicePixelRatio || 1;
+      c.width = innerWidth * dpr; c.height = innerHeight * dpr;
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+      for (const s of stars) {
+        ctx.globalAlpha = s.a; ctx.fillStyle = '#c9d4ff';
+        ctx.beginPath(); ctx.arc(s.x * innerWidth, s.y * innerHeight, s.r, 0, Math.PI * 2); ctx.fill();
+      }
+    }
+    addEventListener('resize', draw);
+    draw();
+  })();
+</script>
+</body>
+</html>

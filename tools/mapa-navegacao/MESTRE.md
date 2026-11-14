@@ -22,23 +22,23 @@ Os jogadores registram o que já sabem: Langtau θ 87°, Teros θ 8°25′ e Arc
 ### 2. Localizar Langtau pelo diário de bordo
 A última viagem da nave foi **de Langtau para Alther**. O diário de bordo registrou o destino nas coordenadas completas da nave, **medidas a partir de Langtau**:
 
-> Destino: Alther · θ 93°00′ · φ 33°40′ · r 37
+> Destino: Alther · θ 93°00′00″ · φ 33°40′00″ · r 37
 
 O puzzle está nos números. 93° não é 87°, mas 93° + 87° = 180°. É a mesma linha vista do outro lado. Se registrarem *"Universo: Alther, medida a partir de: Langtau"* com esses três números, o mapa posiciona Langtau, e o ponto cai exatamente sobre o anel de 87°. É a confirmação de que entenderam.
 
-(Se preferir facilitar, o diário pode trazer Langtau vista de Alther: θ 87°00′ · φ 213°40′ · r 37.)
+(Se preferir facilitar, o diário pode trazer Langtau vista de Alther: θ 87°00′00″ · φ 213°40′00″ · r 37.)
 
 ### 3. O farol de Arcadia: o primeiro feixe
 O contato em Arcadia acende um **farol**, um sinal que a nave consegue captar. Os instrumentos medem a direção do sinal, mas não a distância:
 
-> A partir de Alther: θ 54°00′ · φ 128°15′
+> A partir de Alther: θ 54°00′00″ · φ 128°15′00″
 
 O θ de 54° bate com o registro antigo, o que confirma que o sinal é Arcadia. No mapa aparece um **feixe** saindo de Alther, e ele corta o anel de 54°. Eles sabem a direção, mas não quanto viajar.
 
 ### 4. Saltar para Langtau e medir de novo: o segundo feixe
 Langtau é o único destino com posição completa, então é o primeiro salto seguro. De lá, medem o farol outra vez:
 
-> A partir de Langtau: θ 74°31′ · φ 60°12′
+> A partir de Langtau: θ 74°31′26″ · φ 60°12′12″
 
 Quando registram esse segundo feixe, o mapa encontra o ponto onde os dois se cruzam e **Arcadia aparece**, com a distância calculada. Agora eles podem saltar para lá.
 
@@ -48,12 +48,12 @@ Se algum número for digitado errado, os feixes não se cruzam e Arcadia não ap
 
 | Destino | Visto de | θ | φ | r |
 |---|---|---|---|---|
-| Langtau | Alther | 87°00′ | 213°40′ | 37 |
-| Arcadia | Alther | 54°00′ | 128°15′ | 22 |
-| Alther | Langtau | 93°00′ | 33°40′ | 37 |
-| Arcadia | Langtau | 74°31′ | 60°12′ | 41,2 |
-| Alther | Arcadia | 126°00′ | 308°15′ | 22 |
-| Langtau | Arcadia | 105°29′ | 240°12′ | 41,2 |
-| Teros | Alther | 8°25′ | a definir | a definir |
+| Langtau | Alther | 87°00′00″ | 213°40′00″ | 37 |
+| Arcadia | Alther | 54°00′00″ | 128°15′00″ | 22 |
+| Alther | Langtau | 93°00′00″ | 33°40′00″ | 37 |
+| Arcadia | Langtau | 74°31′26″ | 60°12′12″ | 41,2 |
+| Alther | Arcadia | 126°00′00″ | 308°15′00″ | 22 |
+| Langtau | Arcadia | 105°28′34″ | 240°12′12″ | 41,2 |
+| Teros | Alther | 8°25′00″ | a definir | a definir |
 
-Os valores de φ e r foram escolhidos para o puzzle funcionar bem: os feixes de Alther e de Langtau se cruzam a 63°. Se quiser mudar algum número, todos os outros da tabela precisam ser recalculados.
+Os valores de φ e r foram escolhidos para o puzzle funcionar bem: os feixes de Alther e de Langtau se cruzam a 63°. Os ângulos têm precisão de segundos, a mesma dos discos do mapa. Com esses valores, a triangulação devolve Arcadia exatamente em θ 54°00′00″. Se quiser mudar algum número, todos os outros da tabela precisam ser recalculados.
