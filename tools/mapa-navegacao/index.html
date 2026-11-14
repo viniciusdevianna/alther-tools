@@ -1,0 +1,993 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#070b16">
+<title>Mapa de Navegação</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #070b16;
+    --panel: rgba(13, 19, 36, 0.92);
+    --panel-border: rgba(212, 175, 95, 0.28);
+    --text: #e6e2d6;
+    --muted: #9a9cab;
+    --gold: #d4af5f;
+    --gold-soft: rgba(212, 175, 95, 0.18);
+    --danger: #e0756b;
+    --input-bg: rgba(255, 255, 255, 0.05);
+    --radius: 10px;
+    --mono: ui-monospace, "SF Mono", Menlo, monospace;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; height: 100%; }
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font: 15px/1.45 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+    overflow: hidden;
+    -webkit-tap-highlight-color: transparent;
+  }
+  .app {
+    display: grid;
+    grid-template-columns: 1fr 360px;
+    height: 100vh;
+    height: 100dvh;
+  }
+  .stage { position: relative; min-width: 0; min-height: 0; }
+  canvas { display: block; width: 100%; height: 100%; touch-action: none; cursor: grab; }
+  canvas:active { cursor: grabbing; }
+
+  .hud {
+    position: absolute; top: 12px; left: 16px; right: 16px;
+    display: flex; justify-content: space-between; align-items: flex-start; gap: 12px;
+    pointer-events: none;
+  }
+  .hud > * { pointer-events: auto; }
+  .title {
+    font-family: "Cinzel", Georgia, serif; font-weight: 700; letter-spacing: 0.08em;
+    font-size: 18px; color: var(--gold); margin: 0;
+  }
+  .center-label { color: var(--muted); font-size: 13px; margin-top: 2px; }
+  .center-label strong { color: var(--text); }
+  .hud-buttons { display: flex; gap: 8px; }
+  .route {
+    position: absolute; bottom: 12px; left: 16px; right: 16px;
+    color: var(--muted); font-size: 12px; pointer-events: none;
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  }
+
+  .panel {
+    background: var(--panel);
+    border-left: 1px solid var(--panel-border);
+    overflow-y: auto;
+    padding: 16px;
+    display: flex; flex-direction: column; gap: 18px;
+  }
+  .section h2 {
+    font-family: "Cinzel", Georgia, serif; font-size: 13px; letter-spacing: 0.12em;
+    text-transform: uppercase; color: var(--gold); margin: 0 0 10px; font-weight: 500;
+  }
+  .card {
+    border: 1px solid var(--panel-border); border-radius: var(--radius);
+    padding: 12px; background: rgba(255,255,255,0.02);
+  }
+  .card .name { font-size: 18px; font-weight: 600; margin-bottom: 8px; display: flex; align-items: center; gap: 8px; }
+  .card h3 { font-size: 12px; color: var(--muted); font-weight: 500; margin: 14px 0 6px; text-transform: uppercase; letter-spacing: 0.08em; }
+  .coords { display: grid; grid-template-columns: auto 1fr; gap: 4px 12px; font-variant-numeric: tabular-nums; margin: 0; }
+  .coords dt { color: var(--muted); }
+  .coords dd { margin: 0; font-family: var(--mono); }
+  .row { display: flex; gap: 8px; margin-top: 12px; flex-wrap: wrap; }
+  .empty { color: var(--muted); font-size: 14px; margin: 0; }
+  .swatch { width: 10px; height: 10px; border-radius: 50%; flex: none; }
+
+  .obs { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 4px; }
+  .obs li { display: flex; align-items: center; gap: 8px; font-size: 13px; }
+  .obs .txt { flex: 1; font-family: var(--mono); color: #cfd0d8; }
+  .obs .from { font-family: system-ui, sans-serif; color: var(--muted); }
+  .obs button { min-height: 30px; width: 30px; padding: 0; font-size: 13px; color: var(--muted); }
+
+  button {
+    font: inherit; color: var(--text); background: var(--input-bg);
+    border: 1px solid var(--panel-border); border-radius: 8px;
+    padding: 9px 14px; min-height: 40px; cursor: pointer;
+  }
+  button:hover { background: rgba(255,255,255,0.09); }
+  button.primary { background: var(--gold); color: #1a1406; border-color: var(--gold); font-weight: 600; }
+  button.primary:hover { background: #e2c07a; }
+  button.danger { color: var(--danger); border-color: rgba(224,117,107,0.4); }
+  button.icon { width: 40px; padding: 0; font-weight: 700; }
+
+  .list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 6px; }
+  .list li button {
+    width: 100%; text-align: left; display: flex; flex-direction: column; gap: 2px;
+    background: transparent;
+  }
+  .list li button.selected { border-color: var(--gold); background: var(--gold-soft); }
+  .list .li-name { font-weight: 600; display: flex; align-items: center; gap: 8px; }
+  .list .li-coords { font-size: 12px; color: var(--muted); font-family: var(--mono); }
+  .list .here { color: var(--gold); font-size: 12px; }
+
+  form { display: flex; flex-direction: column; gap: 10px; }
+  label { font-size: 13px; color: var(--muted); display: flex; flex-direction: column; gap: 4px; }
+  input, select {
+    font: inherit; color: var(--text); background: var(--input-bg);
+    border: 1px solid var(--panel-border); border-radius: 8px; padding: 8px 10px; min-height: 40px;
+    width: 100%;
+  }
+  select option { background: #111827; }
+  input:focus, select:focus { outline: 2px solid var(--gold); outline-offset: 1px; }
+  .angle { display: grid; grid-template-columns: 1fr auto 1fr auto; align-items: center; gap: 6px; }
+  .angle span { color: var(--muted); }
+  .error { color: var(--danger); font-size: 13px; min-height: 1em; margin: 0; }
+  .footer-actions { display: flex; gap: 8px; flex-wrap: wrap; }
+  .footer-actions button { flex: 1; font-size: 13px; }
+
+  @media (max-width: 800px) {
+    .app { grid-template-columns: 1fr; grid-template-rows: 1fr minmax(0, 45%); }
+    .panel { border-left: 0; border-top: 1px solid var(--panel-border); }
+  }
+</style>
+</head>
+<body>
+<div class="app">
+  <div class="stage">
+    <canvas id="map" aria-label="Mapa esférico dos universos"></canvas>
+    <div class="hud">
+      <div>
+        <h1 class="title">Mapa de Navegação</h1>
+        <div class="center-label">Centro do mapa: <strong id="centerName">Alther</strong></div>
+      </div>
+      <div class="hud-buttons">
+        <button class="icon" id="btnSound" title="Som"></button>
+        <button class="icon" id="btnRecenter" title="Recentralizar a vista">⌖</button>
+      </div>
+    </div>
+    <div class="route" id="route"></div>
+  </div>
+
+  <aside class="panel">
+    <section class="section">
+      <h2>Selecionado</h2>
+      <div id="selection"></div>
+    </section>
+
+    <section class="section">
+      <h2>Universos conhecidos</h2>
+      <ul class="list" id="list"></ul>
+    </section>
+
+    <section class="section">
+      <h2>Registrar coordenada</h2>
+      <form id="form" autocomplete="off">
+        <label>Universo
+          <input id="fName" required maxlength="40" list="namesList">
+          <datalist id="namesList"></datalist>
+        </label>
+        <label>Medida a partir de
+          <select id="fRef"></select>
+        </label>
+        <label>θ
+          <div class="angle">
+            <input id="fThD" inputmode="decimal" required aria-label="Graus de θ"><span>°</span>
+            <input id="fThM" inputmode="decimal" placeholder="0" aria-label="Minutos de θ"><span>′</span>
+          </div>
+        </label>
+        <label>φ
+          <div class="angle">
+            <input id="fPhD" inputmode="decimal" aria-label="Graus de φ"><span>°</span>
+            <input id="fPhM" inputmode="decimal" placeholder="0" aria-label="Minutos de φ"><span>′</span>
+          </div>
+        </label>
+        <label>r
+          <input id="fR" inputmode="decimal">
+        </label>
+        <p class="error" id="fError"></p>
+        <button class="primary" type="submit">Registrar no mapa</button>
+      </form>
+    </section>
+
+    <section class="section">
+      <h2>Dados</h2>
+      <div class="footer-actions">
+        <button id="btnExport">Exportar</button>
+        <button id="btnImport">Importar</button>
+        <button id="btnReset" class="danger">Apagar tudo</button>
+      </div>
+      <input type="file" id="importFile" accept="application/json,.json" hidden>
+    </section>
+  </aside>
+</div>
+
+<script>
+(() => {
+  'use strict';
+
+  // ---------- Math ----------
+  const DEG = Math.PI / 180;
+  const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
+  const sub = (a, b) => ({ x: a.x - b.x, y: a.y - b.y, z: a.z - b.z });
+  const add = (a, b) => ({ x: a.x + b.x, y: a.y + b.y, z: a.z + b.z });
+  const mul = (a, k) => ({ x: a.x * k, y: a.y * k, z: a.z * k });
+  const dot = (a, b) => a.x * b.x + a.y * b.y + a.z * b.z;
+  const len = a => Math.hypot(a.x, a.y, a.z);
+  const lerp = (a, b, t) => a + (b - a) * t;
+  const lerpV = (a, b, t) => ({ x: lerp(a.x, b.x, t), y: lerp(a.y, b.y, t), z: lerp(a.z, b.z, t) });
+  const ease = t => t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
+  const ORIGIN = { x: 0, y: 0, z: 0 };
+
+  // θ: polar angle from +z axis (0..180). φ: azimuth in xy-plane from +x axis (0..360).
+  function sphToCart(r, th, ph) {
+    const t = th * DEG, p = ph * DEG;
+    return { x: r * Math.sin(t) * Math.cos(p), y: r * Math.sin(t) * Math.sin(p), z: r * Math.cos(t) };
+  }
+  function cartToSph(v) {
+    const r = len(v);
+    if (r < 1e-9) return { r: 0, th: null, ph: null };
+    const th = Math.acos(clamp(v.z / r, -1, 1)) / DEG;
+    let ph = null;
+    if (Math.hypot(v.x, v.y) > 1e-9) {
+      ph = Math.atan2(v.y, v.x) / DEG;
+      if (ph < 0) ph += 360;
+    }
+    return { r, th, ph };
+  }
+
+  // Closest approach between two rays p1 + t·u and p2 + q·v (u, v unit vectors).
+  // Returns the midpoint when both rays point forward and pass close enough to meet.
+  function crossRays(p1, u, p2, v) {
+    const w = sub(p1, p2), b = dot(u, v), d = dot(u, w), e = dot(v, w);
+    const den = 1 - b * b;
+    if (den < 1e-6) return null; // parallel
+    const t = (b * e - d) / den, q = (e - b * d) / den;
+    if (t <= 0 || q <= 0) return null;
+    const a = add(p1, mul(u, t)), c = add(p2, mul(v, q));
+    const gap = len(sub(a, c));
+    if (gap > 0.01 * (t + q) / 2) return null;
+    return mul(add(a, c), 0.5);
+  }
+
+  // ---------- Formatting / parsing ----------
+  function fmtAngle(d, wrap) {
+    if (d == null) return '—';
+    const total = Math.round(d * 60);
+    let D = Math.floor(total / 60), M = total - D * 60;
+    if (wrap && D >= 360) D -= 360;
+    return `${D}°${String(M).padStart(2, '0')}′`;
+  }
+  const fmtR = r => r.toLocaleString('pt-BR', { maximumFractionDigits: 2 });
+  function parseNum(s) {
+    s = String(s || '').trim().replace(',', '.');
+    if (s === '') return NaN;
+    return Number(s);
+  }
+  function niceStep(x) {
+    if (x <= 0) return 1;
+    const p = Math.pow(10, Math.floor(Math.log10(x)));
+    const n = x / p;
+    return (n < 1.5 ? 1 : n < 3.5 ? 2 : n < 7.5 ? 5 : 10) * p;
+  }
+  const PALETTE = ['#e79bd8', '#9be38f', '#f0a46b', '#a8a4ff', '#f2e27a', '#ff8f8f', '#7fe0c8', '#8fc8ff'];
+
+  // ---------- State ----------
+  // universes: [{ id, name }]. 'alther' is the fixed origin of the map.
+  // obs: coordinates of `target` measured from `from`: θ always, φ and r optional.
+  const KEY = 'alther-mapa-navegacao-v2';
+  const defaultState = () => ({
+    universes: [{ id: 'alther', name: 'Alther' }],
+    obs: [],
+    current: 'alther',
+    history: []
+  });
+  const optNum = v => v === null || Number.isFinite(v);
+  function validState(s) {
+    if (!s || !Array.isArray(s.universes) || !Array.isArray(s.obs) || !Array.isArray(s.history)) return false;
+    const ids = new Set(s.universes.map(u => u && u.id));
+    return s.universes.every(u => typeof u.id === 'string' && typeof u.name === 'string') &&
+      ids.has('alther') && ids.has(s.current) &&
+      s.obs.every(o => o && typeof o.id === 'string' && ids.has(o.target) && ids.has(o.from) &&
+        Number.isFinite(o.th) && optNum(o.ph) && optNum(o.r));
+  }
+  function load() {
+    try {
+      const s = JSON.parse(localStorage.getItem(KEY));
+      if (validState(s)) return s;
+    } catch (e) { /* storage unavailable */ }
+    return defaultState();
+  }
+  function save() {
+    try { localStorage.setItem(KEY, JSON.stringify(state)); } catch (e) { /* ignore */ }
+  }
+  let state = load();
+  let selectedId = null;
+  const newId = p => p + Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
+  const byId = id => state.universes.find(u => u.id === id);
+  const colorOf = id => id === 'alther' ? '#f5efe0' : PALETTE[Math.max(0, state.universes.findIndex(u => u.id === id) - 1) % PALETTE.length];
+
+  // ---------- Solving positions from observations ----------
+  let solved = { pos: new Map(), how: new Map(), noCross: new Set() };
+  function solve() {
+    const pos = new Map([['alther', ORIGIN]]);
+    const how = new Map([['alther', 'origem']]);
+    let changed = true;
+    while (changed) {
+      changed = false;
+      for (const o of state.obs) {
+        if (o.ph == null || o.r == null) continue;
+        const v = sphToCart(o.r, o.th, o.ph);
+        if (pos.has(o.from) && !pos.has(o.target)) {
+          pos.set(o.target, add(pos.get(o.from), v)); how.set(o.target, 'medido'); changed = true;
+        } else if (pos.has(o.target) && !pos.has(o.from)) {
+          pos.set(o.from, sub(pos.get(o.target), v)); how.set(o.from, 'medido'); changed = true;
+        }
+      }
+      for (const u of state.universes) {
+        if (pos.has(u.id)) continue;
+        const rays = state.obs.filter(o => o.target === u.id && o.ph != null && o.r == null && pos.has(o.from));
+        let p = null;
+        for (let i = 0; i < rays.length && !p; i++) {
+          for (let j = i + 1; j < rays.length && !p; j++) {
+            if (rays[i].from === rays[j].from) continue;
+            p = crossRays(pos.get(rays[i].from), sphToCart(1, rays[i].th, rays[i].ph),
+                          pos.get(rays[j].from), sphToCart(1, rays[j].th, rays[j].ph));
+          }
+        }
+        if (p) { pos.set(u.id, p); how.set(u.id, 'triangulado'); changed = true; }
+      }
+    }
+    const noCross = new Set();
+    for (const u of state.universes) {
+      if (pos.has(u.id)) continue;
+      const origins = new Set(state.obs.filter(o => o.target === u.id && o.ph != null && o.r == null && pos.has(o.from)).map(o => o.from));
+      if (origins.size >= 2) noCross.add(u.id);
+    }
+    solved = { pos, how, noCross };
+  }
+  const posOf = id => solved.pos.get(id);
+  const located = id => solved.pos.has(id);
+  const curPos = () => posOf(state.current);
+
+  // ---------- View / camera ----------
+  const canvas = document.getElementById('map');
+  const ctx = canvas.getContext('2d');
+  let W = 0, H = 0, DPR = 1;
+  const view = { yaw: -0.6, pitch: 0.42, zoom: 1, center: { ...ORIGIN }, R: 4 };
+  let anim = null;
+
+  function targetRadius(ref) {
+    let max = 0;
+    for (const p of solved.pos.values()) max = Math.max(max, len(sub(p, ref)));
+    if (max === 0) return { R: 4, step: 1 };
+    const step = niceStep(max / 3);
+    return { R: step * Math.ceil((max * 1.08) / step), step };
+  }
+
+  function project(p) {
+    const q = sub(p, view.center);
+    const cy = Math.cos(view.yaw), sy = Math.sin(view.yaw);
+    const x1 = q.x * cy - q.y * sy;
+    const y1 = q.x * sy + q.y * cy;
+    const cp = Math.cos(view.pitch), sp = Math.sin(view.pitch);
+    const y2 = y1 * cp - q.z * sp;
+    const z2 = y1 * sp + q.z * cp;
+    const cam = view.R * 4.5;
+    const s = cam / Math.max(cam + y2, cam * 0.15);
+    const scale = (Math.min(W, H) * 0.36 / view.R) * view.zoom;
+    return { sx: W / 2 + x1 * scale * s, sy: H / 2 + 14 - z2 * scale * s, depth: y2 / view.R, s };
+  }
+
+  function resize() {
+    const r = canvas.getBoundingClientRect();
+    DPR = window.devicePixelRatio || 1;
+    W = r.width; H = r.height;
+    canvas.width = Math.round(W * DPR); canvas.height = Math.round(H * DPR);
+    ctx.setTransform(DPR, 0, 0, DPR, 0, 0);
+    requestDraw();
+  }
+
+  // ---------- Drawing ----------
+  const stars = (() => {
+    let seed = 7;
+    const rnd = () => (seed = (seed * 16807) % 2147483647) / 2147483647;
+    return Array.from({ length: 220 }, () => ({ x: rnd(), y: rnd(), r: rnd() * 1.2 + 0.2, a: rnd() * 0.6 + 0.15 }));
+  })();
+
+  const alphaFor = depth => clamp(0.55 - depth * 0.4, 0.08, 0.9);
+
+  function polyline(points, color, width, baseAlpha = 1, dash = null) {
+    ctx.lineWidth = width;
+    ctx.setLineDash(dash || []);
+    ctx.strokeStyle = color;
+    const pr = points.map(project);
+    for (let i = 0; i < pr.length - 1; i++) {
+      const a = pr[i], b = pr[i + 1];
+      ctx.globalAlpha = clamp(alphaFor((a.depth + b.depth) / 2) * baseAlpha, 0, 1);
+      ctx.beginPath(); ctx.moveTo(a.sx, a.sy); ctx.lineTo(b.sx, b.sy); ctx.stroke();
+    }
+    ctx.globalAlpha = 1;
+    ctx.setLineDash([]);
+  }
+
+  function circle(fn, n = 96) {
+    const pts = [];
+    for (let i = 0; i <= n; i++) pts.push(fn((i / n) * Math.PI * 2));
+    return pts;
+  }
+
+  function text(str, p, opts = {}) {
+    const pr = project(p);
+    ctx.font = opts.font || '12px system-ui, sans-serif';
+    ctx.fillStyle = opts.color || '#9a9cab';
+    ctx.globalAlpha = opts.alpha != null ? opts.alpha : clamp(alphaFor(pr.depth) + 0.2, 0.2, 1);
+    ctx.textAlign = opts.align || 'center';
+    ctx.textBaseline = opts.baseline || 'middle';
+    ctx.fillText(str, pr.sx + (opts.dx || 0), pr.sy + (opts.dy || 0));
+    ctx.globalAlpha = 1;
+  }
+
+  let hitTargets = [];
+
+  function drawGrid() {
+    const c = view.center, R = view.R;
+    const { step } = targetRadius(curPos());
+    const at = v => add(c, v);
+    const GRID = '#6fd3e8', GOLD = '#d4af5f';
+    for (let th = 30; th <= 150; th += 30) {
+      const t = th * DEG;
+      polyline(circle(a => at({ x: R * Math.sin(t) * Math.cos(a), y: R * Math.sin(t) * Math.sin(a), z: R * Math.cos(t) })),
+        GRID, th === 90 ? 1.4 : 0.8, th === 90 ? 0.9 : 0.45);
+    }
+    for (let ph = 0; ph < 360; ph += 30) {
+      const p = ph * DEG, pts = [];
+      for (let i = 0; i <= 48; i++) {
+        const t = (i / 48) * Math.PI;
+        pts.push(at({ x: R * Math.sin(t) * Math.cos(p), y: R * Math.sin(t) * Math.sin(p), z: R * Math.cos(t) }));
+      }
+      polyline(pts, GRID, ph === 0 ? 1.4 : 0.8, ph === 0 ? 0.9 : 0.4);
+    }
+    for (let k = step; k < R - 1e-9; k += step) {
+      polyline(circle(a => at({ x: k * Math.cos(a), y: k * Math.sin(a), z: 0 })), GRID, 0.6, 0.35, [3, 5]);
+      text(fmtR(k), at({ x: k * Math.cos(-0.3), y: k * Math.sin(-0.3), z: 0 }), { font: '10px system-ui', color: GRID });
+    }
+    text(fmtR(R), at({ x: R * Math.cos(-0.3), y: R * Math.sin(-0.3), z: 0 }), { font: '10px system-ui', color: GRID });
+    polyline([at({ x: 0, y: 0, z: -R }), at({ x: 0, y: 0, z: R * 1.12 })], GOLD, 1.2, 0.9);
+    polyline([at(ORIGIN), at({ x: R * 1.12, y: 0, z: 0 })], GOLD, 1, 0.7, [6, 4]);
+    text('0°', at({ x: 0, y: 0, z: R * 1.2 }), { color: GOLD, font: '600 13px system-ui' });
+    text('180°', at({ x: 0, y: 0, z: -R * 1.1 }), { color: GOLD, font: '12px system-ui' });
+    for (let ph = 0; ph < 360; ph += 30) {
+      const p = ph * DEG;
+      text(`${ph}°`, at({ x: R * 1.1 * Math.cos(p), y: R * 1.1 * Math.sin(p), z: 0 }),
+        { color: ph === 0 ? GOLD : '#9ab8c4', font: ph === 0 ? '600 13px system-ui' : '11px system-ui' });
+    }
+  }
+
+  // Partial observations: θ only → ring (cone around the vertical through the origin);
+  // θ + φ → ray from the origin. They stay on the map after the universe is located.
+  function drawPartials(now) {
+    const R = view.R;
+    const labels = [];
+    for (const o of state.obs) {
+      if (o.r != null || !located(o.from)) continue;
+      const targetKnown = located(o.target);
+      const glowing = o.target === selectedId || discoveryT(o.target, now) != null;
+      const color = colorOf(o.target);
+      const origin = posOf(o.from);
+      const w = glowing ? 2.4 : targetKnown ? 1.1 : 1.6;
+      const alpha = glowing ? 1.6 : targetKnown ? 0.55 : 1.2;
+      if (o.ph == null) {
+        // Once the target is known, the ring is drawn at its real distance, so the point sits on it.
+        const D = targetKnown ? len(sub(posOf(o.target), origin)) : R;
+        const t = o.th * DEG;
+        const pts = circle(a => add(origin, { x: D * Math.sin(t) * Math.cos(a), y: D * Math.sin(t) * Math.sin(a), z: D * Math.cos(t) }));
+        polyline(pts, color, w, alpha);
+        if (!targetKnown) {
+          let best = null;
+          for (const p of pts) { const pr = project(p); if (!best || pr.depth < best.pr.depth) best = { p, pr }; }
+          labels.push({ name: byId(o.target).name, p: best.p, color });
+        }
+      } else {
+        const dir = sphToCart(1, o.th, o.ph);
+        const reach = targetKnown ? len(sub(posOf(o.target), origin)) * 1.15
+                                  : Math.max(R * 2.2, len(sub(origin, view.center)) + R * 1.5);
+        const pts = [];
+        for (let i = 0; i <= 40; i++) pts.push(add(origin, mul(dir, reach * i / 40)));
+        polyline(pts, color, w, alpha, [10, 6]);
+        if (!targetKnown) labels.push({ name: byId(o.target).name, p: add(origin, mul(dir, Math.min(reach, R * 1.05))), color });
+      }
+    }
+    for (const l of labels) text(l.name, l.p, { color: l.color, font: '600 12px system-ui', dy: -10, alpha: 0.95 });
+  }
+
+  // ---------- Discovery animation ----------
+  const DISCOVERY_MS = 2600;
+  let discoveries = []; // { id, t0 }
+  function discoveryT(id, now) {
+    const d = discoveries.find(x => x.id === id);
+    if (!d) return null;
+    const t = (now - d.t0) / DISCOVERY_MS;
+    return t >= 0 && t < 1 ? t : null;
+  }
+  const easeOutBack = t => { const c = 1.9; return 1 + (c + 1) * Math.pow(t - 1, 3) + c * Math.pow(t - 1, 2); };
+  const easeOut = t => 1 - Math.pow(1 - t, 3);
+
+  function drawDiscoveryBurst(x, y, color, t) {
+    // Bright flash
+    const fr = 70 * (0.4 + t);
+    const flash = ctx.createRadialGradient(x, y, 0, x, y, fr);
+    flash.addColorStop(0, '#ffffff'); flash.addColorStop(0.25, color); flash.addColorStop(1, 'rgba(0,0,0,0)');
+    ctx.globalAlpha = Math.pow(1 - t, 2) * 0.9;
+    ctx.fillStyle = flash;
+    ctx.beginPath(); ctx.arc(x, y, fr, 0, Math.PI * 2); ctx.fill();
+    // Expanding shockwaves
+    ctx.strokeStyle = color;
+    for (let k = 0; k < 3; k++) {
+      const tk = t * 1.5 - k * 0.2;
+      if (tk <= 0 || tk >= 1) continue;
+      ctx.globalAlpha = (1 - tk) * 0.85;
+      ctx.lineWidth = 2.5 * (1 - tk) + 0.5;
+      ctx.beginPath(); ctx.arc(x, y, 8 + easeOut(tk) * 130, 0, Math.PI * 2); ctx.stroke();
+    }
+    // Sparks flying outward
+    for (let i = 0; i < 18; i++) {
+      const a = (i / 18) * Math.PI * 2 + (i % 2) * 0.17;
+      const dist = easeOut(t) * (60 + (i % 3) * 25);
+      ctx.globalAlpha = (1 - t) * 0.9;
+      ctx.fillStyle = i % 3 === 0 ? '#ffffff' : color;
+      ctx.beginPath(); ctx.arc(x + Math.cos(a) * dist, y + Math.sin(a) * dist, 2 * (1 - t) + 0.6, 0, Math.PI * 2); ctx.fill();
+    }
+    ctx.globalAlpha = 1;
+  }
+
+  function drawUniverses(now) {
+    const cur = state.current;
+    const items = [...solved.pos.entries()].map(([id, p]) => ({ id, pr: project(p) }))
+      .sort((a, b) => b.pr.depth - a.pr.depth);
+    hitTargets = [];
+    for (const { id, pr } of items) {
+      const u = byId(id);
+      const isCur = id === cur, isSel = id === selectedId;
+      const color = isCur ? '#d4af5f' : colorOf(id);
+      const dt = discoveryT(id, now);
+      let grow = 1, labelAlpha = 1;
+      if (dt != null) {
+        drawDiscoveryBurst(pr.sx, pr.sy, color, dt);
+        grow = dt < 0.12 ? 0 : easeOutBack(clamp((dt - 0.12) / 0.4, 0, 1));
+        labelAlpha = clamp((dt - 0.35) / 0.3, 0, 1);
+      }
+      const rad = (isCur ? 8 : 6) * clamp(pr.s, 0.6, 1.4) * grow;
+      if (rad > 0.1) {
+        const glow = ctx.createRadialGradient(pr.sx, pr.sy, 0, pr.sx, pr.sy, rad * 3.5);
+        glow.addColorStop(0, color); glow.addColorStop(1, 'rgba(0,0,0,0)');
+        ctx.globalAlpha = 0.45; ctx.fillStyle = glow;
+        ctx.beginPath(); ctx.arc(pr.sx, pr.sy, rad * 3.5, 0, Math.PI * 2); ctx.fill();
+        ctx.globalAlpha = 1; ctx.fillStyle = color;
+        ctx.beginPath(); ctx.arc(pr.sx, pr.sy, rad, 0, Math.PI * 2); ctx.fill();
+      }
+      if (isSel && grow >= 1) {
+        ctx.strokeStyle = '#ffffff'; ctx.lineWidth = 2;
+        ctx.beginPath(); ctx.arc(pr.sx, pr.sy, rad + 5, 0, Math.PI * 2); ctx.stroke();
+      }
+      ctx.globalAlpha = labelAlpha;
+      ctx.font = `${isCur ? '700 14px' : '600 13px'} system-ui, sans-serif`;
+      ctx.textAlign = 'center'; ctx.textBaseline = 'bottom';
+      ctx.fillStyle = isCur ? '#d4af5f' : '#e6e2d6';
+      ctx.fillText(u.name, pr.sx, pr.sy - Math.max(rad, 6) - 6);
+      ctx.globalAlpha = 1;
+      hitTargets.push({ id, x: pr.sx, y: pr.sy, depth: pr.depth });
+    }
+  }
+
+  function draw(now) {
+    ctx.clearRect(0, 0, W, H);
+    const g = ctx.createRadialGradient(W / 2, H / 2, 0, W / 2, H / 2, Math.max(W, H) * 0.7);
+    g.addColorStop(0, '#0f1730'); g.addColorStop(1, '#05070f');
+    ctx.fillStyle = g; ctx.fillRect(0, 0, W, H);
+    for (const s of stars) {
+      ctx.globalAlpha = s.a; ctx.fillStyle = '#c9d4ff';
+      ctx.beginPath(); ctx.arc(s.x * W, s.y * H, s.r, 0, Math.PI * 2); ctx.fill();
+    }
+    ctx.globalAlpha = 1;
+    drawGrid();
+    drawPartials(now);
+    drawUniverses(now);
+  }
+
+  let drawQueued = false;
+  function requestDraw() {
+    if (drawQueued) return;
+    drawQueued = true;
+    requestAnimationFrame(frame);
+  }
+  function frame(now) {
+    drawQueued = false;
+    if (anim) {
+      const t = clamp((now - anim.t0) / anim.dur, 0, 1), e = ease(t);
+      view.center = lerpV(anim.from, anim.to, e);
+      view.R = lerp(anim.R0, anim.R1, e);
+      if (t >= 1) anim = null;
+    }
+    discoveries = discoveries.filter(d => now - d.t0 < DISCOVERY_MS);
+    draw(now);
+    if (anim || discoveries.length) requestDraw();
+  }
+
+  function retarget(animate) {
+    const p = curPos();
+    const R1 = targetRadius(p).R;
+    if (animate) {
+      anim = { from: { ...view.center }, to: { ...p }, R0: view.R, R1, t0: performance.now(), dur: 1400 };
+    } else {
+      view.center = { ...p };
+      view.R = R1;
+    }
+    requestDraw();
+  }
+
+  // ---------- Sound (synthesized with Web Audio, no files needed) ----------
+  const SOUND_KEY = 'alther-mapa-navegacao-som';
+  let muted = false;
+  try { muted = localStorage.getItem(SOUND_KEY) === 'off'; } catch (e) { /* ignore */ }
+  let actx = null;
+  function audio() {
+    if (muted) return null;
+    if (!actx) {
+      const C = window.AudioContext || window.webkitAudioContext;
+      if (!C) return null;
+      actx = new C();
+    }
+    if (actx.state === 'suspended') actx.resume();
+    return actx;
+  }
+  // Shared echo bus, gives the sounds a spacious tail.
+  function echoBus(c) {
+    const input = c.createGain();
+    const delay = c.createDelay(1);
+    const fb = c.createGain();
+    const lp = c.createBiquadFilter();
+    const wet = c.createGain();
+    delay.delayTime.value = 0.21; fb.gain.value = 0.42; lp.type = 'lowpass'; lp.frequency.value = 2600; wet.gain.value = 0.5;
+    input.connect(c.destination);
+    input.connect(delay); delay.connect(lp); lp.connect(fb); fb.connect(delay); lp.connect(wet); wet.connect(c.destination);
+    return input;
+  }
+  function tone(c, out, freq, start, dur, type, peak) {
+    const o = c.createOscillator(), g = c.createGain();
+    o.type = type; o.frequency.value = freq;
+    g.gain.setValueAtTime(0.0001, start);
+    g.gain.exponentialRampToValueAtTime(peak, start + 0.02);
+    g.gain.exponentialRampToValueAtTime(0.0001, start + dur);
+    o.connect(g); g.connect(out);
+    o.start(start); o.stop(start + dur + 0.05);
+  }
+  function playDiscovery() {
+    const c = audio(); if (!c) return;
+    const out = echoBus(c), t = c.currentTime + 0.05;
+    // Low swell
+    const pad = c.createOscillator(), pg = c.createGain();
+    pad.type = 'sine'; pad.frequency.setValueAtTime(110, t); pad.frequency.exponentialRampToValueAtTime(220, t + 1.2);
+    pg.gain.setValueAtTime(0.0001, t); pg.gain.exponentialRampToValueAtTime(0.18, t + 0.5); pg.gain.exponentialRampToValueAtTime(0.0001, t + 2.2);
+    pad.connect(pg); pg.connect(out); pad.start(t); pad.stop(t + 2.3);
+    // Rising shimmer arpeggio (D lydian)
+    [587.33, 739.99, 880, 1046.5, 1174.66, 1479.98].forEach((f, i) => {
+      tone(c, out, f, t + 0.25 + i * 0.085, 1.6, 'sine', 0.12);
+      tone(c, out, f * 2, t + 0.25 + i * 0.085, 0.9, 'triangle', 0.025);
+    });
+  }
+  function playJump() {
+    const c = audio(); if (!c) return;
+    const out = echoBus(c), t = c.currentTime + 0.03, dur = 1.5;
+    const buf = c.createBuffer(1, Math.floor(c.sampleRate * dur), c.sampleRate);
+    const data = buf.getChannelData(0);
+    for (let i = 0; i < data.length; i++) data[i] = Math.random() * 2 - 1;
+    const noise = c.createBufferSource(), bp = c.createBiquadFilter(), ng = c.createGain();
+    noise.buffer = buf; bp.type = 'bandpass'; bp.Q.value = 4;
+    bp.frequency.setValueAtTime(180, t); bp.frequency.exponentialRampToValueAtTime(2800, t + 0.7); bp.frequency.exponentialRampToValueAtTime(220, t + dur);
+    ng.gain.setValueAtTime(0.0001, t); ng.gain.exponentialRampToValueAtTime(0.35, t + 0.6); ng.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+    noise.connect(bp); bp.connect(ng); ng.connect(out); noise.start(t); noise.stop(t + dur);
+    const boom = c.createOscillator(), bg = c.createGain();
+    boom.type = 'sine'; boom.frequency.setValueAtTime(90, t + 0.65); boom.frequency.exponentialRampToValueAtTime(38, t + 1.4);
+    bg.gain.setValueAtTime(0.0001, t + 0.6); bg.gain.exponentialRampToValueAtTime(0.4, t + 0.7); bg.gain.exponentialRampToValueAtTime(0.0001, t + 1.5);
+    boom.connect(bg); bg.connect(c.destination); boom.start(t + 0.6); boom.stop(t + 1.55);
+  }
+
+  // Mobile browsers (iPad especially) only unlock audio inside a user gesture.
+  ['pointerdown', 'keydown'].forEach(ev => document.addEventListener(ev, () => audio(), { capture: true }));
+
+  // ---------- Input on canvas ----------
+  const pointers = new Map();
+  let pinch = null, tapStart = null;
+  canvas.addEventListener('pointerdown', e => {
+    canvas.setPointerCapture(e.pointerId);
+    pointers.set(e.pointerId, { x: e.clientX, y: e.clientY });
+    if (pointers.size === 1) tapStart = { x: e.clientX, y: e.clientY, moved: false };
+    if (pointers.size === 2) {
+      const [a, b] = [...pointers.values()];
+      pinch = { d: Math.hypot(a.x - b.x, a.y - b.y), zoom: view.zoom };
+      tapStart = null;
+    }
+  });
+  canvas.addEventListener('pointermove', e => {
+    if (!pointers.has(e.pointerId)) return;
+    const prev = pointers.get(e.pointerId);
+    const cur = { x: e.clientX, y: e.clientY };
+    pointers.set(e.pointerId, cur);
+    if (pointers.size === 1) {
+      const dx = cur.x - prev.x, dy = cur.y - prev.y;
+      if (tapStart && Math.hypot(cur.x - tapStart.x, cur.y - tapStart.y) > 6) tapStart.moved = true;
+      view.yaw += dx * 0.008;
+      view.pitch = clamp(view.pitch + dy * 0.008, -Math.PI / 2, Math.PI / 2);
+      requestDraw();
+    } else if (pointers.size === 2 && pinch) {
+      const [a, b] = [...pointers.values()];
+      view.zoom = clamp(pinch.zoom * Math.hypot(a.x - b.x, a.y - b.y) / pinch.d, 0.3, 6);
+      requestDraw();
+    }
+  });
+  function endPointer(e) {
+    if (!pointers.has(e.pointerId)) return;
+    pointers.delete(e.pointerId);
+    if (pointers.size < 2) pinch = null;
+    if (pointers.size === 0 && tapStart && !tapStart.moved && e.type === 'pointerup') {
+      const r = canvas.getBoundingClientRect();
+      const x = e.clientX - r.left, y = e.clientY - r.top;
+      let best = null, bestD = 28;
+      for (const h of hitTargets) {
+        const d = Math.hypot(h.x - x, h.y - y);
+        if (d < bestD) { best = h; bestD = d; }
+      }
+      select(best ? best.id : null);
+    }
+    if (pointers.size === 0) tapStart = null;
+  }
+  canvas.addEventListener('pointerup', endPointer);
+  canvas.addEventListener('pointercancel', endPointer);
+  canvas.addEventListener('wheel', e => {
+    e.preventDefault();
+    view.zoom = clamp(view.zoom * Math.exp(-e.deltaY * 0.0015), 0.3, 6);
+    requestDraw();
+  }, { passive: false });
+
+  // ---------- UI ----------
+  const $ = id => document.getElementById(id);
+  const esc = s => String(s).replace(/[&<>"']/g, ch => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[ch]));
+  const swatch = id => `<span class="swatch" style="background:${id === state.current ? '#d4af5f' : colorOf(id)}"></span>`;
+  const relTo = id => cartToSph(sub(posOf(id), curPos()));
+  const coordsInline = sph => `r ${fmtR(sph.r)} · θ ${fmtAngle(sph.th)} · φ ${fmtAngle(sph.ph, true)}`;
+  function obsInline(o) {
+    let s = `θ ${fmtAngle(o.th)}`;
+    if (o.ph != null) s += ` · φ ${fmtAngle(o.ph, true)}`;
+    if (o.r != null) s += ` · r ${fmtR(o.r)}`;
+    return s;
+  }
+  function partialSummary(id) {
+    if (solved.noCross.has(id)) return 'feixes sem cruzamento';
+    const own = state.obs.filter(o => o.target === id);
+    if (!own.length) return '—';
+    return own.map(o => `${byId(o.from).name}: ${obsInline(o)}`).join(' | ');
+  }
+
+  function renderSelection() {
+    const el = $('selection');
+    const u = selectedId ? byId(selectedId) : null;
+    if (!u) {
+      el.innerHTML = '<p class="empty">Toque num universo no mapa ou na lista.</p>';
+      return;
+    }
+    const isCur = u.id === state.current;
+    const isLoc = located(u.id);
+    const related = state.obs.filter(o => o.target === u.id || o.from === u.id);
+    let body = '';
+    if (isCur) {
+      body = '<p class="empty">A nave está aqui.</p>';
+    } else if (isLoc) {
+      const s = relTo(u.id);
+      body = `<dl class="coords">
+        <dt>r</dt><dd>${fmtR(s.r)}</dd>
+        <dt>θ</dt><dd>${fmtAngle(s.th)}</dd>
+        <dt>φ</dt><dd>${fmtAngle(s.ph, true)}</dd>
+      </dl>`;
+    } else {
+      body = `<p class="empty">${solved.noCross.has(u.id) ? 'Feixes sem cruzamento.' : 'Posição desconhecida.'}</p>`;
+    }
+    const obsHtml = related.length ? `<h3>Registros</h3><ul class="obs">${related.map(o => `<li>
+        <span class="txt"><span class="from">${esc(byId(o.target).name)} a partir de ${esc(byId(o.from).name)}:</span><br>${obsInline(o)}</span>
+        <button data-obs="${esc(o.id)}" title="Apagar registro">✕</button></li>`).join('')}</ul>` : '';
+    el.innerHTML = `<div class="card">
+      <div class="name">${swatch(u.id)}${esc(u.name)}</div>
+      ${body}
+      ${obsHtml}
+      <div class="row">
+        ${isCur || !isLoc ? '' : '<button class="primary" id="btnJump">Saltar para cá</button>'}
+        ${u.id === 'alther' || isCur ? '' : '<button class="danger" id="btnDelete">Remover</button>'}
+      </div>
+    </div>`;
+    const j = $('btnJump'); if (j) j.onclick = () => jump(u.id);
+    const d = $('btnDelete'); if (d) d.onclick = () => removeUniverse(u.id);
+    el.querySelectorAll('[data-obs]').forEach(b => b.onclick = () => removeObs(b.dataset.obs));
+  }
+
+  function renderList() {
+    const cur = state.current;
+    const rows = state.universes.filter(u => u.id !== cur).map(u => {
+      const loc = located(u.id);
+      return { u, loc, sph: loc ? relTo(u.id) : null };
+    }).sort((a, b) => (b.loc - a.loc) || (a.loc ? a.sph.r - b.sph.r : a.u.name.localeCompare(b.u.name)));
+    $('list').innerHTML = [`<li><button data-id="${esc(cur)}" class="${cur === selectedId ? 'selected' : ''}">
+        <span class="li-name">${swatch(cur)}${esc(byId(cur).name)}</span><span class="here">◆ Você está aqui</span></button></li>`,
+      ...rows.map(({ u, loc, sph }) => `<li>
+      <button data-id="${esc(u.id)}" class="${u.id === selectedId ? 'selected' : ''}">
+        <span class="li-name">${swatch(u.id)}${esc(u.name)}</span>
+        <span class="li-coords">${loc ? coordsInline(sph) : esc(partialSummary(u.id))}</span>
+      </button></li>`)].join('');
+    $('list').querySelectorAll('button').forEach(b => b.onclick = () => select(b.dataset.id));
+  }
+
+  function renderForm() {
+    const sel = $('fRef'), prev = sel.value;
+    sel.innerHTML = state.universes.map(u =>
+      `<option value="${esc(u.id)}">${esc(u.name)}${u.id === state.current ? ' (centro atual)' : ''}</option>`).join('');
+    sel.value = byId(prev) ? prev : state.current;
+    $('namesList').innerHTML = state.universes.map(u => `<option value="${esc(u.name)}">`).join('');
+  }
+
+  function renderHud() {
+    $('centerName').textContent = byId(state.current).name;
+    const names = [...state.history, state.current].map(byId).filter(Boolean).map(u => u.name);
+    $('route').textContent = names.length > 1 ? `Rota: ${names.join(' → ')}` : '';
+  }
+
+  function renderAll() {
+    renderHud(); renderSelection(); renderList(); renderForm(); requestDraw();
+  }
+
+  function commit(animate = true) {
+    const before = new Set(solved.pos.keys());
+    solve();
+    const found = [...solved.pos.keys()].filter(id => !before.has(id));
+    if (found.length) {
+      const t0 = performance.now() + (animate ? 300 : 0);
+      found.forEach((id, i) => discoveries.push({ id, t0: t0 + i * 450 }));
+      setTimeout(playDiscovery, animate ? 300 : 0);
+    }
+    save(); retarget(animate); renderAll();
+  }
+
+  function select(id) {
+    selectedId = id;
+    renderSelection(); renderList(); requestDraw();
+  }
+
+  function jump(id) {
+    if (id === state.current || !located(id)) return;
+    state.history.push(state.current);
+    state.current = id;
+    selectedId = null;
+    playJump();
+    commit();
+  }
+
+  // Undo a change if it would leave the ship (or its route) without a position.
+  function guardedChange(mutate, msg) {
+    const backup = JSON.stringify(state);
+    mutate();
+    solve();
+    if (!located(state.current)) {
+      state = JSON.parse(backup);
+      solve();
+      alert(msg);
+      return false;
+    }
+    return true;
+  }
+
+  function removeObs(obsId) {
+    if (!confirm('Apagar este registro?')) return;
+    if (!guardedChange(() => { state.obs = state.obs.filter(o => o.id !== obsId); },
+      'Este registro é o que localiza o universo onde a nave está. Ele não pode ser apagado daqui.')) return;
+    commit();
+  }
+
+  function removeUniverse(id) {
+    const u = byId(id);
+    if (!u || id === 'alther' || id === state.current) return;
+    if (!confirm(`Remover ${u.name} e todos os registros ligados a ele?`)) return;
+    if (!guardedChange(() => {
+      state.universes = state.universes.filter(x => x.id !== id);
+      state.obs = state.obs.filter(o => o.target !== id && o.from !== id);
+      state.history = state.history.filter(h => h !== id);
+    }, `Não é possível remover ${u.name}: a posição atual da nave depende dele.`)) return;
+    selectedId = null;
+    commit();
+  }
+
+  $('form').addEventListener('submit', e => {
+    e.preventDefault();
+    const err = $('fError');
+    const name = $('fName').value.trim();
+    const from = $('fRef').value;
+    const thD = parseNum($('fThD').value), thM = parseNum($('fThM').value || '0');
+    const phRaw = $('fPhD').value.trim(), rRaw = $('fR').value.trim();
+    const hasPh = phRaw !== '', hasR = rRaw !== '';
+    const phD = parseNum(phRaw), phM = parseNum($('fPhM').value || '0');
+    const r = parseNum(rRaw);
+    const th = thD + thM / 60, ph = hasPh ? phD + phM / 60 : null;
+
+    if (!name) return err.textContent = 'Dê um nome ao universo.';
+    const existing = state.universes.find(u => u.name.toLowerCase() === name.toLowerCase());
+    if (existing && existing.id === from) return err.textContent = 'Um universo não pode ser medido a partir dele mesmo.';
+    if (![thD, thM].every(Number.isFinite) || (hasPh && ![phD, phM].every(Number.isFinite)))
+      return err.textContent = 'Os ângulos precisam ser números.';
+    if (thM < 0 || thM >= 60 || (hasPh && (phM < 0 || phM >= 60))) return err.textContent = 'Os minutos vão de 0 a 59.';
+    if (th < 0 || th > 180) return err.textContent = 'θ fora do intervalo.';
+    if (hasPh && (ph < 0 || ph > 360)) return err.textContent = 'φ fora do intervalo.';
+    if (hasR && (!Number.isFinite(r) || r <= 0)) return err.textContent = 'r inválido.';
+    if (hasR && !hasPh) return err.textContent = 'r sem φ não pode ser registrado.';
+
+    let target = existing;
+    if (!target) {
+      target = { id: newId('u'), name };
+      state.universes.push(target);
+    }
+    state.obs.push({ id: newId('o'), target: target.id, from, th, ph, r: hasR ? r : null });
+    err.textContent = '';
+    e.target.reset();
+    selectedId = target.id;
+    commit();
+  });
+
+  function renderSound() { $('btnSound').textContent = muted ? '🔇' : '🔊'; }
+  $('btnSound').onclick = () => {
+    muted = !muted;
+    try { localStorage.setItem(SOUND_KEY, muted ? 'off' : 'on'); } catch (e) { /* ignore */ }
+    renderSound();
+  };
+  renderSound();
+
+  $('btnRecenter').onclick = () => {
+    view.yaw = -0.6; view.pitch = 0.42; view.zoom = 1;
+    requestDraw();
+  };
+
+  $('btnExport').onclick = () => {
+    const blob = new Blob([JSON.stringify(state, null, 2)], { type: 'application/json' });
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = 'mapa-navegacao.json';
+    a.click();
+    setTimeout(() => URL.revokeObjectURL(a.href), 1000);
+  };
+  $('btnImport').onclick = () => $('importFile').click();
+  $('importFile').onchange = async e => {
+    const f = e.target.files[0];
+    e.target.value = '';
+    if (!f) return;
+    try {
+      const s = JSON.parse(await f.text());
+      if (!validState(s)) throw new Error('invalid');
+      if (!confirm('Substituir o mapa atual pelo arquivo importado?')) return;
+      state = s; selectedId = null;
+      solve();
+      if (!located(state.current)) { state.current = 'alther'; state.history = []; }
+      commit(false);
+    } catch (err) {
+      alert('Arquivo inválido.');
+    }
+  };
+  $('btnReset').onclick = () => {
+    if (!confirm('Apagar todos os universos registrados e voltar para Alther?')) return;
+    state = defaultState(); selectedId = null; commit();
+  };
+
+  window.addEventListener('resize', resize);
+  solve();
+  if (!located(state.current)) { state.current = 'alther'; state.history = []; }
+  resize();
+  retarget(false);
+  renderAll();
+})();
+</script>
+</body>
+</html>

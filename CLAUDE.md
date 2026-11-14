@@ -1,0 +1,10 @@
+# alther-tools
+
+Conjunto de ferramentas simples para sessões de RPG de mesa (páginas, mini-apps, utilitários). Não é uma aplicação única nem complexa.
+
+## Convenções
+
+- Cada ferramenta vive em sua própria pasta em `tools/<nome-da-ferramenta>/` e é independente das outras.
+- Preferir soluções simples: HTML/CSS/JS puro sempre que possível, sem build e sem dependências desnecessárias.
+- Toda ferramenta nova (ou alterada) **deve** ser documentada no `README.md`, na seção "Ferramentas", seguindo o modelo que está no próprio README: o que faz, como usar e onde fica.
+- Idioma da documentação e da interface: português (Brasil).
