@@ -64,6 +64,43 @@ Quando um universo é encontrado, o mapa toca uma **animação com som**. Saltar
 
 **Localização:** `tools/mapa-navegacao/`
 
+### Fichas e Decks
+
+**O que faz:** versão simples da ficha de personagem e do deck de cartas, enquanto a aplicação completa não fica pronta. Cada jogador cria seus personagens, preenche e edita a ficha (a mesma da planilha *Alther-Ficha-Cartas*), adquire cartas do catálogo e monta o deck de cada personagem. Tudo fica salvo no navegador do aparelho, sem servidor nem banco de dados.
+
+**Como usar:**
+1. Abra `tools/fichas/index.html` em qualquer navegador (ou pela página inicial). Não precisa instalar nada.
+2. Na tela inicial, toque em **+ Novo personagem**. Os personagens aparecem em cards com raça, escola, caminhos (★ = Mestre) e a situação do deck.
+3. **Aba Ficha**: identificação (Raça, Arquétipo, Escola e Aspiração são listas), progresso (NP, XP, PD), atributos, dados, caminhos, recursos (PV, recargas, moedas, acessório), inventário, anotações e companheiro animal. Os valores são preenchidos à mão, como na planilha, com estas regras:
+   - um valor **atual nunca passa do total** (atributos, PV, recargas, XP, PC e PV do companheiro). Enquanto você digita, o campo fica vermelho; ao sair dele, o atual é corrigido para o total;
+   - cada caminho tem **PC atual** e **PC total** (até 10.000) e **Nível** (até 10);
+   - **Cartas adquiridas** do caminho é contado automaticamente;
+   - **Mestre** é automático: o caminho vira Mestre ao chegar no nível 10;
+   - ao escolher a raça, a ficha mostra a habilidade e a restrição raciais; ao escolher um caminho, mostra a intrínseca dele (quando houver). Toque no nome para ver a descrição.
+4. **Aba Catálogo**: mostra as cartas com custo, alcance, acerto, defesas, desequilíbrio, efeito e palavras-chave. Dá para buscar (nome, código ou qualquer texto) e filtrar por caminho, tipo, classe, atributo e situação. No personagem, o filtro começa em **Meus caminhos**. Cada carta tem dois controles:
+   - **Adquiridas**: compra uma cópia. Só é possível adquirir cartas dos caminhos que o personagem tem (ou cartas sem caminho). Se a carta tiver **custo de aquisição**, ele é descontado do **PC atual** do caminho, e a aquisição fica bloqueada sem PC suficiente. O **−** desfaz uma aquisição e devolve os PC;
+   - **No deck**: põe ou tira cópias adquiridas do deck.
+5. **Aba Deck**: lista as cartas adquiridas por caminho, com "no deck / adquiridas", e os avisos de regra. Use **Só o deck** para ver apenas o que está no deck. Regras verificadas:
+   - o deck tem de **15 a 30 cartas**;
+   - só entram **cópias adquiridas**;
+   - no máximo **3 cópias** (coluna "Limite no Deck") por **nome de deck**: Pummel I, II e III, por exemplo, somam juntas;
+   - cartas da classe **Única** só podem ter **1 cópia**, mesmo que a coluna diga outra coisa.
+6. Tudo é salvo automaticamente no navegador. Para não perder nada (ou levar para outro aparelho), use **Exportar** na tela inicial (todos os personagens) ou **Exportar esta ficha** no fim da ficha, e depois **Importar** o arquivo `.json`. Limpar os dados do navegador apaga as fichas.
+
+**Atualizando o catálogo e as listas:** os dados vêm das planilhas em `tools/fichas/planilhas/`:
+- `Cartas Alther.xlsx`, aba **Geral**: o catálogo de cartas e a lista de caminhos. Linhas sem nome são ignoradas (cartas ainda não criadas). O **Código** identifica a carta no deck dos jogadores, então não mude o código de uma carta que já existe;
+- `Alther-Ficha-Cartas.xlsx`, aba **Base de Dados**: escolas, raças, arquétipos, aspirações, famílias de companheiro e as descrições das habilidades raciais e intrínsecas.
+
+Depois de alterar uma planilha (baixe de novo do Google Sheets e substitua o arquivo), rode:
+
+```
+python3 tools/fichas/converter.py
+```
+
+O script regenera `tools/fichas/cartas.js` e `tools/fichas/dados.js` (precisa do `openpyxl`: `pip install openpyxl`).
+
+**Localização:** `tools/fichas/`
+
 <!--
 Modelo para cada nova ferramenta:
 
