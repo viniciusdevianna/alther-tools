@@ -87,6 +87,8 @@ Quando um universo é encontrado, o mapa toca uma **animação com som**. Saltar
 
 **O que faz:** versão simples da ficha de personagem e do deck de cartas, enquanto a aplicação completa não fica pronta. Cada jogador cria seus personagens, preenche e edita a ficha (a mesma da planilha *Alther-Ficha-Cartas*), adquire cartas do catálogo e monta o deck de cada personagem. Tudo fica salvo no navegador do aparelho, sem servidor nem banco de dados.
 
+O visual é de mangá: papel com retícula, quadros com contorno de nanquim, títulos em faixas pretas, descrições em balões de fala e destaques em vermelho. Os estilos ficam em `estilo.css` (e os da batalha no próprio `batalha.html`).
+
 **Como usar:**
 1. Abra `tools/fichas/index.html` em qualquer navegador (ou pela página inicial). Não precisa instalar nada.
 2. Na tela inicial, toque em **+ Novo personagem**. Os personagens aparecem em cards com raça, escola, caminhos (★ = Mestre) e a situação do deck.
