@@ -16,7 +16,26 @@ tools/
     ...
 ```
 
-Ao criar uma ferramenta nova, adicione um card para ela na página inicial.
+Ao criar uma ferramenta nova, adicione um card para ela na página inicial, com `data-ferramenta="<nome-da-pasta>"` no `<li>` (é assim que a publicação sabe esconder o card).
+
+## Publicação (site para os jogadores)
+
+O site fica no GitHub Pages, em `https://viniciusdevianna.github.io/alther-tools/`, e é atualizado sozinho a cada push na `main` (workflow `.github/workflows/publicar.yml`).
+
+**Só vão para o site as ferramentas listadas em `publicar.txt`**, uma pasta de `tools/` por linha. As outras não são publicadas e o card delas some da página inicial. Para liberar o mapa, por exemplo, troque `# mapa-navegacao` por `mapa-navegacao`, faça commit e push; em um ou dois minutos ele está no ar. Para esconder de novo, comente a linha.
+
+Planilhas, scripts (`.py`) e arquivos `.md` (como o `MESTRE.md`) nunca vão para o site. Mas o repositório é público, então quem procurar no GitHub consegue ver o código de tudo.
+
+Para conferir o que vai ao ar sem publicar: `python3 publicar.py` monta a pasta `_site/` (ignorada pelo git).
+
+**Configuração inicial (uma vez só):**
+1. No GitHub, em **Settings → General → Danger Zone → Change visibility**, torne o repositório público.
+2. Em **Settings → Pages → Build and deployment → Source**, escolha **GitHub Actions**.
+3. Faça um push na `main` (ou rode o workflow em **Actions → Publicar site → Run workflow**).
+
+**Para os jogadores:** abram o endereço no navegador do telefone ou tablet e usem **Compartilhar → Adicionar à Tela de Início** (iPhone/iPad) ou **⋮ → Adicionar à tela inicial** (Android) para ter um ícone de app. As fichas ficam salvas no navegador de cada aparelho; para trocar de aparelho, usem Exportar/Importar.
+
+Quando você mesmo quiser usar uma ferramenta não liberada, abra o `index.html` dela direto da pasta no seu computador.
 
 ## Ferramentas
 

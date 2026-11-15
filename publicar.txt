@@ -1,0 +1,5 @@
+# Ferramentas liberadas para os jogadores no site publicado.
+# Uma pasta de tools/ por linha. Para liberar uma ferramenta, adicione o nome;
+# para esconder, apague a linha ou comente com #. Depois faça commit e push.
+fichas
+# mapa-navegacao
