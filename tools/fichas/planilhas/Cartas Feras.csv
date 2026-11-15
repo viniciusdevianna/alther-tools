@@ -1,0 +1,19 @@
+﻿Caminho;Tipo;Classes;Atributo;Código;Nome;Deck Name;Custo;Alcance;Acerto;Defesa Física;Defesa Artística;Desequilíbrio;Efeito;Palavras-chave;Custo Aquisição;Limite no Deck;Família;Nível Família
+;Ataque;Fera | Padrão;Natureza;F001;Ataque Corpo a Corpo;Ataque Corpo a Corpo;1;1;10;NA;NA;NA;Sucesso: causa C4 de dano no alvo.;;;10;;
+;Defesa;Fera | Padrão;Natureza;F002;Preparar;Preparar;1;-;-;NA;NA;NA;Coloque esta carta no campo do usuário. Ao jogar sua próxima carta de ataque ela tem acerto automático e descarte esta carta.;;;10;;
+;Ataque;Fera | Padrão;Natureza;F003;Mordida Venenosa;Mordida Venenosa;2;1;10;NA;NA;NA;Causa F4 de dano no alvo. Sucesso: também envenena(F5) o alvo. Falha: causa metade do dano.;;;3;Yeji;1
+;Ataque;Fera | Padrão;Natureza;F004;Investida Tática;Investida Tática;3;-;-;NA;NA;NA;Oculte esta carta. Ao ser revelada, causa F3 de dano perfurante(1) no alvo.;Ocultar;;3;Yeji;5
+;Defesa;Fera | Padrão;Natureza;F005;Anti-veneno;Anti-veneno;4;-;-;NA;NA;NA;Descarte uma debilidade de um alvo para curar F4 da vida do usuário.;;;3;Yeji;10
+;Ataque;Fera | Padrão;Natureza;F006;Aperto Mortal;Aperto Mortal;5;1;12;NA;NA;NA;Sucesso: causa 10 + F2 de dano em um inimigo adjacente e o deixa paralisado até o fim da rodada. Falha: causa metade do dano e deixa o alvo imobilizado até o fim da rodada.;;;3;Yeji;15
+;Ataque;Fera | Padrão;Natureza;F007;Patas Geladas;Patas Geladas;2;1;10;NA;NA;NA;Causa E3 de dano no alvo. Sucesso: também imobiliza o alvo. Falha: causa metade do dano.;;;3;Kilua;1
+;Ataque;Fera | Padrão;Natureza;F008;Uivo da Lua do Norte;Uivo da Lua do Norte;3;-;-;NA;NA;NA;Todos os inimigos ficam lentos até o fim da rodada.;;;3;Kilua;5
+;Defesa;Fera | Suporte;Natureza;F009;Matilha;Matilha;4;-;-;NA;NA;NA;Enquanto esta carta estiver em campo, ataques dos aliados adjacentes ao usuário causam +E3 (do usuário) de dano bônus.;;;3;Kilua;10
+;Ataque;Fera | Padrão;Natureza;F010;Queda da Lua do Norte;Queda da Lua do Norte;5;1;20;NA;NA;NA;Move o usuário em linha reta por 6 m e causa 10 + E2 de dano em todos os inimigos adjacentes e no trajeto.;;;3;Kilua;15
+;Ataque;Fera | Padrão;Natureza;F011;Raio Multicor;Raio Multicor;2;5;8;NA;NA;NA;Causa M3 de dano no alvo. Sucesso: também causa metade do dano nos inimigos em AOE(1) ao redor do alvo. Falha: causa metade do dano.;;;3;Carbuncle;1
+;Defesa;Fera | Suporte;Natureza;F012;Barreira Prismática;Barreira Prismática;3;-;-;NA;NA;NA;Enquanto esta carta estiver em campo, aliados adjacentes ao usuário possuem M4 de defesa artística.;;;3;Carbuncle;5
+;Defesa;Fera | Padrão;Natureza;F013;Brilho Etéreo;Brilho Etéreo;4;6;-;NA;NA;NA;Oculte a carta de caminho de um aliado e o conceda protegido(M10).;Ocultar;;3;Carbuncle;10
+;Defesa;Fera | Padrão;Natureza;F014;Refração Prismática;Refração Prismática;5;6;-;NA;NA;NA;Descarte uma tormenta ou debilidade de cada aliado em AOE(1) ao redor do alvo e cure o usuário em M3 para cada tormenta ou debilidade descartada por esta carta.;;;3;Carbuncle;15
+;Ataque;Fera | Padrão;Natureza;F015;Golpe Concentrado;Golpe Concentrado;2;1;6;NA;NA;NA;Sucesso: descarte a carta de equipamento de menor custo da mão do oponente e cause C3 de dano. Falha: causa C4 de dano.;;;3;Baganoir;1
+;Defesa;Fera | Suporte;Natureza;F016;Bloqueio de Corpo;Bloqueio de Corpo;3;-;-;NA;NA;NA;Enquanto esta carta estiver em campo, quando um aliado adjacente ao usuário sofre dano físico, o usuário tem 50% de chance de absorver o dano.;;;3;Baganoir;5
+;Defesa;Fera | Padrão;Natureza;F017;Sacrifício Tribal;Sacrifício Tribal;4;10;8;NA;NA;NA;Sacrifica 20% da vida máxima do usuário para curar um alvo. Sucesso: cura o alvo no dobro do valor sacrificado. Falha: cura o alvo no mesmo valor sacrificado.;;;3;Baganoir;10
+;Ataque;Fera | Padrão;Natureza;F018;Fúria;Fúria;5;1;6;NA;NA;NA;Sucesso: causa C3 de dano perfurante(1) em um alvo e descarta a carta de defesa de custo mais alto da mão do alvo. Falha: causa C3 de dano perfurante(1).;;;3;Baganoir;15

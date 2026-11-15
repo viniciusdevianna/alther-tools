@@ -31,6 +31,8 @@ PASTA = Path(__file__).resolve().parent
 FICHA_XLSX = PASTA / "planilhas" / "Alther-Ficha-Cartas.xlsx"
 CARTAS_XLSX = PASTA / "planilhas" / "Cartas Alther.xlsx"
 CSVS_SEM_CAMINHO = sorted((PASTA / "planilhas").glob("Cartas *.csv"))
+FAMILIAS_CSV = PASTA / "planilhas" / "Familias Companheiro.csv"
+PASTA_FERAS = PASTA / "imagens" / "feras"
 SAIDA_DADOS = PASTA / "dados.js"
 SAIDA_CARTAS = PASTA / "cartas.js"
 PASTA_RETRATOS = PASTA / "imagens" / "racas"
@@ -84,7 +86,7 @@ def ate_vazio(ws, col, ini):
 def carta(r):
     """Uma linha da planilha (dict coluna -> valor) no formato do catálogo."""
     nome = texto(r.get("Nome"))
-    return {
+    out = {
         "id": texto(r.get("Código")),
         "nome": nome,
         "deckName": texto(r.get("Deck Name")) or nome,
@@ -103,6 +105,13 @@ def carta(r):
         "custoAquisicao": numero(r.get("Custo Aquisição")),
         "limite": numero(r.get("Limite no Deck")) or 3,
     }
+    # Cartas de companheiro animal (classe Fera): família dona da carta e nível que a libera.
+    # Só aparecem quando preenchidas, para não mudar as outras cartas.
+    if texto(r.get("Família")):
+        out["familia"] = texto(r.get("Família"))
+    if numero(r.get("Nível Família")) is not None:
+        out["nivelFamilia"] = numero(r.get("Nível Família"))
+    return out
 
 
 def cartas():
@@ -191,7 +200,36 @@ def base_de_dados(caminhos):
         "familiasCompanheiro": familias,
         "racial": por_raca,
         "intrinseca": por_caminho,
+        "familias": familias_companheiro(familias),
     }
+
+
+def familias_companheiro(lista):
+    """Dados das cartas de família (planilhas/Familias Companheiro.csv) e a imagem de cada uma."""
+    if not FAMILIAS_CSV.exists():
+        return {}
+    out = {}
+    with FAMILIAS_CSV.open(encoding="utf-8-sig", newline="") as f:
+        for r in csv.DictReader(f, delimiter=";"):
+            nome = texto(r.get("Família"))
+            if not nome:
+                continue
+            arq = PASTA_FERAS / f"{slug(nome)}.jpg"
+            out[nome] = {
+                "custo": texto(r.get("Custo")),
+                "atributos": {k: numero(r.get(col)) for k, col in (("corpo", "Corpo"), ("mente", "Mente"), ("foco", "Foco"), ("espirito", "Espírito"))},
+                "pv": numero(r.get("PV")),
+                "passiva": texto(r.get("Passiva")),
+                "niveis": [{"nivel": n, "texto": texto(r.get(f"Nv{n}"))} for n in (1, 5, 10, 15, 20) if texto(r.get(f"Nv{n}"))],
+                "imagem": f"imagens/feras/{arq.name}" if arq.exists() else None,
+            }
+    fora = [n for n in out if n not in lista]
+    if fora:
+        print("aviso: famílias do CSV fora da lista da Base de Dados (coluna I):", ", ".join(fora))
+    sem = [n for n in lista if n not in out]
+    if sem:
+        print("aviso: famílias sem carta em Familias Companheiro.csv:", ", ".join(sem))
+    return out
 
 
 def escrever_js(caminho, variavel, dados, origem):

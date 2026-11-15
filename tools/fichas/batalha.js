@@ -1,12 +1,21 @@
 (() => {
   'use strict';
 
-  const { esc, norm, num, cartaPorId, classeAtributo, htmlTags, htmlCorpoCarta, CHAVE_FICHAS, chaveBatalha, lerFichas } = window.Alther;
+  const { esc, norm, num, cartaPorId, classeAtributo, htmlTags, htmlCorpoCarta, CHAVE_FICHAS, chaveBatalha, lerFichas, ATRIBUTOS_FERA, temCompanheiro, ehBestial } = window.Alther;
 
   const MAO_INICIAL = 5;
   const DESFAZER_MAX = 40;
   const ATRIBUTOS = [['corpo', 'Corpo'], ['mente', 'Mente'], ['foco', 'Foco'], ['espirito', 'Espírito'], ['social', 'Social'], ['natureza', 'Natureza']];
-  const ZONAS = { deck: 'Deck', mao: 'Mão', campo: 'Campo', descarte: 'Descarte', banidas: 'Banidas' };
+  const ZONAS = {
+    deck: 'Deck', mao: 'Mão', campo: 'Campo', descarte: 'Descarte', banidas: 'Banidas',
+    fDeck: 'Deck do companheiro', fMao: 'Mão do companheiro', fCampo: 'Campo do companheiro', fDescarte: 'Descarte do companheiro', fBanidas: 'Banidas do companheiro',
+  };
+  // Zonas do companheiro animal (quando o deck dele não foi embaralhado junto com o do personagem).
+  const FZ = { deck: 'fDeck', mao: 'fMao', campo: 'fCampo', descarte: 'fDescarte', banidas: 'fBanidas' };
+  const ehZonaFera = (z) => Object.values(FZ).includes(z);
+  const ehDeck = (z) => z === 'deck' || z === 'fDeck';
+  // Cópias de cartas do companheiro têm instância "f1", "f2"...; as do personagem, "c1", "c2"...
+  const ehInstFera = (inst) => String(inst).startsWith('f');
 
   const $app = document.getElementById('app');
   const $titulo = document.getElementById('titulo');
@@ -31,6 +40,8 @@
   const par = (x) => ({ atual: num(x && x.atual), total: num(x && x.total) });
   function recargas() { const p = personagem(); return par(p && p.recargas); }
   function pontos(chave) { const p = personagem(); return par(p && p.atributos && p.atributos[chave]); }
+  function pontosFera(chave) { const p = personagem(); const c = p && p.companheiro; return par(c && c.atributos && c.atributos[chave]); }
+  const nomeFera = () => { const c = (personagem() || {}).companheiro || {}; return c.nome || c.familia || 'Companheiro'; };
 
   // Lê a ficha mais recente, altera e grava (a ficha pode ter sido editada em outra aba).
   function alterarFicha(fn) {
@@ -46,11 +57,21 @@
     p.atributos = p.atributos || {};
     p.atributos[chave] = { ...(p.atributos[chave] || {}), atual: String(valor) };
   });
+  const gravarAtributoFera = (chave, valor) => alterarFicha((p) => {
+    p.companheiro = p.companheiro || {};
+    p.companheiro.atributos = p.companheiro.atributos || {};
+    p.companheiro.atributos[chave] = { ...(p.companheiro.atributos[chave] || {}), atual: String(valor) };
+  });
   // Foto dos valores da ficha que a batalha altera, para o Desfazer devolvê-los.
   function fotoFicha() {
     const p = personagem() || {};
     const at = p.atributos || {};
-    return JSON.stringify({ recargas: (p.recargas && p.recargas.atual) ?? '', atributos: Object.fromEntries(ATRIBUTOS.map(([k]) => [k, (at[k] && at[k].atual) ?? ''])) });
+    const af = (p.companheiro && p.companheiro.atributos) || {};
+    return JSON.stringify({
+      recargas: (p.recargas && p.recargas.atual) ?? '',
+      atributos: Object.fromEntries(ATRIBUTOS.map(([k]) => [k, (at[k] && at[k].atual) ?? ''])),
+      fera: Object.fromEntries(ATRIBUTOS_FERA.map(([k]) => [k, (af[k] && af[k].atual) ?? ''])),
+    });
   }
   function restaurarFoto(foto) {
     const f = JSON.parse(foto);
@@ -58,26 +79,38 @@
       p.recargas = { ...(p.recargas || {}), atual: f.recargas };
       p.atributos = p.atributos || {};
       for (const [k, v] of Object.entries(f.atributos)) p.atributos[k] = { ...(p.atributos[k] || {}), atual: v };
+      if (f.fera) {
+        p.companheiro = p.companheiro || {};
+        p.companheiro.atributos = p.companheiro.atributos || {};
+        for (const [k, v] of Object.entries(f.fera)) p.companheiro.atributos[k] = { ...(p.companheiro.atributos[k] || {}), atual: v };
+      }
     });
   }
 
   // Custo da carta: pago com pontos do atributo atual da própria carta (Corpo, Mente...).
   // Itens têm atributo "Qualquer" (o X da carta): o jogador escolhe qual atributo paga.
+  // Cartas do companheiro pagam com os atributos dele (Corpo, Mente, Foco, Espírito);
+  // Natureza e Social, que o companheiro não tem, saem do personagem.
   // Devolve as formas de pagar; lista vazia = carta sem custo.
-  function custosDe(c) {
+  function custosDe(c, inst) {
     const valor = num(c.custo);
     const chave = norm(c.atributo);
     if (!valor || valor <= 0) return [];
     const opcoes = chave === 'qualquer' ? ATRIBUTOS : ATRIBUTOS.filter(([k]) => k === chave);
-    return opcoes.map(([k, nome]) => ({ chave: k, valor, nome }));
+    const daFera = ehInstFera(inst);
+    return opcoes.map(([k, nome]) => {
+      const fera = daFera && ATRIBUTOS_FERA.some(([x]) => x === k);
+      return { chave: k, valor, nome: fera ? `${nome} de ${nomeFera()}` : nome, fera };
+    });
   }
+  const pontosDe = (k) => (k.fera ? pontosFera(k.chave) : pontos(k.chave));
   function motivoNaoPagar(k) {
-    const disponivel = pontos(k.chave).atual ?? 0;
+    const disponivel = pontosDe(k).atual ?? 0;
     return disponivel < k.valor ? `${k.nome} insuficiente: tem ${disponivel}, a carta custa ${k.valor}.` : '';
   }
   // Motivo para não poder jogar: só quando nenhuma forma de pagar é possível.
   function motivoNaoJogar(inst) {
-    const ks = custosDe(cartaDe(inst));
+    const ks = custosDe(cartaDe(inst), inst);
     if (!ks.length || ks.some((k) => !motivoNaoPagar(k))) return '';
     return ks.length === 1 ? motivoNaoPagar(ks[0]) : `Nenhum atributo tem ${ks[0].valor} pontos para pagar a carta.`;
   }
@@ -85,6 +118,8 @@
   // ---------- armazenamento ----------
   function carregar() {
     try { estado = JSON.parse(localStorage.getItem(CHAVE)); } catch (e) { estado = null; }
+    // Batalhas salvas antes do companheiro animal não têm as zonas dele.
+    if (estado) Object.values(FZ).forEach((z) => { if (!Array.isArray(estado[z])) estado[z] = []; });
   }
   function salvar() {
     try {
@@ -143,10 +178,15 @@
   }
 
   // ---------- regras ----------
-  function novaBatalha(p) {
+  const deckFeraDe = (p) => (temCompanheiro(p) && p.companheiro && p.companheiro.deck) || {};
+  const totalDe = (obj) => Object.values(obj).reduce((s, q) => s + (Number(q) || 0), 0);
+  // juntar: o Bestial pode embaralhar o deck do companheiro junto com o seu.
+  function novaBatalha(p, juntar) {
     const instancias = {};
     const deck = [];
+    const fDeck = [];
     let n = 0;
+    let nf = 0;
     for (const [id, q] of Object.entries(p.deck || {})) {
       for (let i = 0; i < q; i++) {
         const inst = `c${++n}`;
@@ -154,16 +194,31 @@
         deck.push(inst);
       }
     }
-    estado = { versao: 1, personagemId: p.id, iniciadaEm: Date.now(), rodada: 0, emRodada: false, instancias, deck: embaralhar(deck), mao: [], campo: [], descarte: [], banidas: [], historico: [] };
-    registrar(`Batalha iniciada com ${deck.length} cartas. Deck embaralhado.`);
+    for (const [id, q] of Object.entries(deckFeraDe(p))) {
+      for (let i = 0; i < q; i++) {
+        const inst = `f${++nf}`;
+        instancias[inst] = id;
+        (juntar ? deck : fDeck).push(inst);
+      }
+    }
+    const fera = nf ? (juntar ? 'junto' : 'separado') : null;
+    estado = {
+      versao: 2, personagemId: p.id, iniciadaEm: Date.now(), rodada: 0, emRodada: false, instancias, fera,
+      deck: embaralhar(deck), mao: [], campo: [], descarte: [], banidas: [],
+      fDeck: embaralhar(fDeck), fMao: [], fCampo: [], fDescarte: [], fBanidas: [],
+      historico: [],
+    };
+    if (fera === 'junto') registrar(`Batalha iniciada com ${deck.length} cartas (${nf} do companheiro, embaralhadas junto). Deck embaralhado.`);
+    else if (fera === 'separado') registrar(`Batalha iniciada com ${deck.length} cartas e ${nf} no deck do companheiro. Decks embaralhados.`);
+    else registrar(`Batalha iniciada com ${deck.length} cartas. Deck embaralhado.`);
     pilhaDesfazer.length = 0;
     salvar();
     render();
   }
 
-  function comprar(qtd) {
-    const compradas = estado.deck.splice(0, qtd);
-    estado.mao.push(...compradas);
+  function comprar(qtd, fera) {
+    const compradas = estado[fera ? 'fDeck' : 'deck'].splice(0, qtd);
+    estado[fera ? 'fMao' : 'mao'].push(...compradas);
     return compradas.length;
   }
   function iniciarRodada() {
@@ -180,16 +235,32 @@
       const n = estado.mao.length;
       estado.descarte.push(...estado.mao);
       estado.mao = [];
+      const nf = estado.fMao.length;
+      estado.fDescarte.push(...estado.fMao);
+      estado.fMao = [];
       estado.emRodada = false;
-      registrar(`Fim da rodada: ${n} carta(s) da mão foram para o descarte.`);
+      registrar(`Fim da rodada: ${n} carta(s) da mão foram para o descarte${nf ? ` e ${nf} da mão do companheiro para o descarte dele` : ''}.`);
     });
   }
-  function comprarAvulsa() {
-    if (!estado.deck.length) { avisar('O deck está vazio. Use Recarregar.'); return; }
+  function comprarAvulsa(fera) {
+    const deck = estado[fera ? 'fDeck' : 'deck'];
+    if (!deck.length) { avisar(fera ? 'O deck do companheiro está vazio. Use Recarregar.' : 'O deck está vazio. Use Recarregar.'); return; }
     acao(() => {
-      const [inst] = estado.deck.slice(0, 1);
-      comprar(1);
-      registrar(`Comprou 1 carta avulsa (${nomeDe(inst)}).`);
+      const [inst] = deck.slice(0, 1);
+      comprar(1, fera);
+      registrar(fera ? `${nomeFera()} comprou 1 carta (${nomeDe(inst)}).` : `Comprou 1 carta avulsa (${nomeDe(inst)}).`);
+    });
+  }
+  // O deck do companheiro recarrega sem gastar as Recargas do personagem.
+  function recarregarFera() {
+    if (!estado.fDescarte.length) { avisar('O descarte do companheiro está vazio.'); return; }
+    if (!confirm(`Recarregar o deck do companheiro? As ${estado.fDescarte.length} carta(s) do descarte dele voltam ao deck dele, que é embaralhado.`)) return;
+    acao(() => {
+      const n = estado.fDescarte.length;
+      estado.fDeck.push(...estado.fDescarte);
+      estado.fDescarte = [];
+      embaralhar(estado.fDeck);
+      registrar(`Recarregou o deck do companheiro: ${n} carta(s) do descarte voltaram ao deck dele, que foi embaralhado.`);
     });
   }
   function recarregar() {
@@ -208,18 +279,18 @@
   }
 
   // Jogar: paga o custo com o atributo escolhido (k, de custosDe) e coloca a carta no campo.
-  function jogar(inst, k) {
+  function jogar(inst, k, de = 'mao') {
     const motivo = k ? motivoNaoPagar(k) : motivoNaoJogar(inst);
     if (motivo) { avisar(motivo); return; }
     const c = cartaDe(inst);
     acao(() => {
-      const i = estado.mao.indexOf(inst);
+      const i = estado[de].indexOf(inst);
       if (i < 0) return false;
-      estado.mao.splice(i, 1);
-      estado.campo.push(inst);
+      estado[de].splice(i, 1);
+      estado[de === 'fMao' ? 'fCampo' : 'campo'].push(inst);
       if (k) {
-        const resta = (pontos(k.chave).atual ?? 0) - k.valor;
-        gravarAtributo(k.chave, resta);
+        const resta = (pontosDe(k).atual ?? 0) - k.valor;
+        (k.fera ? gravarAtributoFera : gravarAtributo)(k.chave, resta);
         registrar(`Jogou ${c.nome}: pagou ${k.valor} de ${k.nome} (resta ${resta}).`);
       } else {
         registrar(`Jogou ${c.nome}.`);
@@ -233,10 +304,10 @@
       const i = estado[de].indexOf(inst);
       if (i < 0) return false;
       estado[de].splice(i, 1);
-      if (para === 'deck') {
-        if (posicao === 'topo') estado.deck.unshift(inst);
-        else if (posicao === 'fundo') estado.deck.push(inst);
-        else { estado.deck.push(inst); embaralhar(estado.deck); }
+      if (ehDeck(para)) {
+        if (posicao === 'topo') estado[para].unshift(inst);
+        else if (posicao === 'fundo') estado[para].push(inst);
+        else { estado[para].push(inst); embaralhar(estado[para]); }
       } else {
         estado[para].push(inst);
       }
@@ -245,15 +316,19 @@
   }
 
   // Ações disponíveis para uma carta em cada zona.
-  function acoesDe(zona, inst) {
-    const nome = nomeDe(inst);
-    const a = (rotulo, para, texto, extra = {}) => ({ rotulo, fn: () => mover(inst, zona, para, extra.posicao, texto), ...extra });
+  function acoesDe(zonaReal, inst) {
+    // Zonas do companheiro usam as mesmas ações, apontando para as pilhas dele.
+    const fera = ehZonaFera(zonaReal);
+    const zona = fera ? Object.keys(FZ).find((k) => FZ[k] === zonaReal) : zonaReal;
+    const Z = (z) => (fera ? FZ[z] : z);
+    const nome = nomeDe(inst) + (fera ? ` (${nomeFera()})` : '');
+    const a = (rotulo, para, texto, extra = {}) => ({ rotulo, fn: () => mover(inst, zonaReal, Z(para), extra.posicao, texto), ...extra });
     if (zona === 'mao') {
-      const ks = custosDe(cartaDe(inst));
+      const ks = custosDe(cartaDe(inst), inst);
       // Um botão Jogar por forma de pagar (itens: um por atributo).
       const jogadas = ks.length
-        ? ks.map((k) => ({ rotulo: `Jogar (−${k.valor} ${k.nome})`, fn: () => jogar(inst, k), principal: true, motivo: ks.length > 1 ? '' : motivoNaoPagar(k), bloqueado: !!motivoNaoPagar(k) }))
-        : [{ rotulo: 'Jogar', fn: () => jogar(inst, null), principal: true }];
+        ? ks.map((k) => ({ rotulo: `Jogar (−${k.valor} ${k.nome})`, fn: () => jogar(inst, k, zonaReal), principal: true, motivo: ks.length > 1 ? '' : motivoNaoPagar(k), bloqueado: !!motivoNaoPagar(k) }))
+        : [{ rotulo: 'Jogar', fn: () => jogar(inst, null, zonaReal), principal: true }];
       return [
         ...jogadas,
         a('Descartar', 'descarte', `Descartou ${nome} da mão.`),
@@ -284,7 +359,7 @@
 
   // ---------- janela ----------
   // Ao fechar a janela depois de ver o deck, ele é embaralhado (como ao procurar no deck físico).
-  let deckFoiVisto = false;
+  let deckFoiVisto = null; // 'deck' ou 'fDeck'
   function abrirJanela(titulo, corpo, voltar) {
     $janela.innerHTML = `<div class="janela-topo">
         ${voltar ? '<button class="btn pequeno" data-j="voltar" aria-label="Voltar">←</button>' : ''}
@@ -299,13 +374,14 @@
   function fecharJanela(embaralharSeVisto = true) {
     if ($janela.open) $janela.close();
     if (embaralharSeVisto && deckFoiVisto) {
-      deckFoiVisto = false;
-      if (estado && estado.deck.length > 1) {
-        acao(() => { embaralhar(estado.deck); registrar('Deck embaralhado depois da busca.'); });
-        avisar('Deck embaralhado.');
+      const z = deckFoiVisto;
+      deckFoiVisto = null;
+      if (estado && estado[z].length > 1) {
+        acao(() => { embaralhar(estado[z]); registrar(`${ZONAS[z]} embaralhado depois da busca.`); });
+        avisar(`${ZONAS[z]} embaralhado.`);
       }
     }
-    deckFoiVisto = false;
+    deckFoiVisto = null;
   }
   $janela.addEventListener('cancel', (e) => { e.preventDefault(); fecharJanela(); });
   $janela.addEventListener('click', (e) => {
@@ -320,7 +396,7 @@
       const deVolta = $janela._lista;
       fn();
       // Ao mexer numa carta vinda de uma lista, volta para a lista; senão fecha.
-      if (deVolta && deVolta.zona !== 'deck' && estado[deVolta.zona].length) abrirLista(deVolta.zona);
+      if (deVolta && !ehDeck(deVolta.zona) && estado[deVolta.zona].length) abrirLista(deVolta.zona);
       else fecharJanela();
     }
   });
@@ -331,7 +407,7 @@
     $janela._acoes = acoes.map((x) => x.fn);
     $janela._lista = lista || null;
     const botoes = acoes.map((x, i) => `<button class="btn ${x.principal ? 'principal' : ''} ${x.perigo ? 'perigo' : ''}" data-j="acao" data-i="${i}" ${x.motivo || x.bloqueado ? 'disabled' : ''}>${esc(x.rotulo)}</button>`).join('');
-    const nenhum = zona === 'mao' && motivoNaoJogar(inst);
+    const nenhum = (zona === 'mao' || zona === 'fMao') && motivoNaoJogar(inst);
     const motivos = (nenhum ? [{ motivo: nenhum }] : acoes).filter((x) => x.motivo).map((x) => `<p class="aviso-janela">${esc(x.motivo)} Ajuste pela 📜 Ficha se precisar.</p>`).join('');
     abrirJanela(`${ZONAS[zona]}`, `
       <article class="carta ${classeAtributo(c)}">
@@ -347,19 +423,19 @@
     const c = cartaDe(inst);
     return `<button class="item-lista ${classeAtributo(c)}" data-j="item" data-inst="${inst}" data-zona="${zona}">
       ${pos ? `<span class="pos">${esc(pos)}</span>` : ''}
-      <span class="nome">${esc(c.nome)}<br><small>${esc([c.tipo, c.atributo, c.custo !== '' && c.custo != null ? `Custo ${c.custo}` : ''].filter(Boolean).join(' · '))}</small></span>
+      <span class="nome">${esc(c.nome)}${ehInstFera(inst) ? ' <span class="pata" title="Carta do companheiro">🐾</span>' : ''}<br><small>${esc([c.tipo, c.atributo, c.custo !== '' && c.custo != null ? `Custo ${c.custo}` : ''].filter(Boolean).join(' · '))}</small></span>
     </button>`;
   }
   function abrirLista(zona) {
     const itens = estado[zona];
     let corpo;
-    if (zona === 'deck') {
-      deckFoiVisto = true;
+    if (ehDeck(zona)) {
+      deckFoiVisto = zona;
       // Em ordem alfabética, para achar a carta; a ordem real não é revelada.
       const ordenados = [...itens].sort((a, b) => nomeDe(a).localeCompare(nomeDe(b), 'pt-BR'));
       corpo = `<p class="aviso-janela">Ao fechar, o deck será embaralhado.</p>
         <div class="lista-cartas">${ordenados.map((i) => itemLista(i, zona)).join('') || '<div class="zona-vazia">Deck vazio.</div>'}</div>`;
-    } else if (zona === 'descarte') {
+    } else if (zona === 'descarte' || zona === 'fDescarte') {
       // Do topo (mais recente) para baixo. A ordem do descarte nunca muda.
       const doTopo = [...itens].reverse();
       corpo = `<div class="lista-cartas">${doTopo.map((i, k) => itemLista(i, zona, k === 0 ? 'topo' : `${k + 1}º`)).join('') || '<div class="zona-vazia">Descarte vazio.</div>'}</div>`;
@@ -404,16 +480,77 @@
   // ---------- desenho ----------
   function mini(inst, zona) {
     const c = cartaDe(inst);
-    const caro = zona === 'mao' && !!motivoNaoJogar(inst);
+    const caro = (zona === 'mao' || zona === 'fMao') && !!motivoNaoJogar(inst);
     const nums = [['Custo', c.custo], ['Alc.', c.alcance], ['Acerto', c.acerto]]
       .filter(([, v]) => v !== '' && v != null && v !== 'NA' && v !== '-')
       .map(([t, v]) => `<span class="${t === 'Custo' && caro ? 'caro' : ''}" ${t === 'Custo' && caro ? 'title="Pontos insuficientes"' : ''}>${t} <b>${esc(v)}</b></span>`).join('');
     return `<button class="mini ${classeAtributo(c)}" data-inst="${inst}" data-zona="${zona}">
-      <h3>${esc(c.nome)}</h3>
+      <h3>${esc(c.nome)}${ehInstFera(inst) ? ' <span class="pata" title="Carta do companheiro">🐾</span>' : ''}</h3>
       <span class="sub">${esc([c.tipo, ...(c.classes || [])].filter(Boolean).join(' · '))}</span>
       ${nums ? `<span class="nums">${nums}</span>` : ''}
       ${c.efeito ? `<p>${esc(c.efeito)}</p>` : ''}
     </button>`;
+  }
+
+  // Pontos do companheiro (pagam as cartas dele) e, com o deck separado, as pilhas e zonas dele.
+  function htmlPontosFera() {
+    const c = (personagem() || {}).companheiro || {};
+    const pv = par(c.pv);
+    return `<section class="pontos pontos-fera" aria-label="Pontos atuais do companheiro">
+      ${ATRIBUTOS_FERA.map(([k, t]) => {
+        const v = pontosFera(k);
+        return `<button class="ponto atr atr-${k}" data-acao="abrir-ficha" title="${t} do companheiro: atual / total"><span>${t}</span><b>${v.atual ?? '—'}</b>${v.total != null ? `<small>/ ${v.total}</small>` : ''}</button>`;
+      }).join('')}
+      <button class="ponto pv" data-acao="abrir-ficha" title="PV do companheiro: atual / total"><span>PV</span><b>${pv.atual ?? '—'}</b>${pv.total != null ? `<small>/ ${pv.total}</small>` : ''}</button>
+    </section>`;
+  }
+  function htmlAreaFera() {
+    if (!estado.fera) return '';
+    const c = (personagem() || {}).companheiro || {};
+    const titulo = `<h2 class="titulo-fera">🐾 ${esc(nomeFera())}${c.familia && c.nome ? ` <small>${esc(c.familia)}</small>` : ''}</h2>`;
+    if (estado.fera === 'junto') {
+      return `<section class="area-fera">${titulo}<p class="contagem-pilha">O deck do companheiro foi embaralhado junto com o seu. Cartas dele (🐾) pagam o custo com os pontos abaixo; Natureza e Social saem dos seus.</p>${htmlPontosFera()}</section>`;
+    }
+    const topo = estado.fDescarte[estado.fDescarte.length - 1];
+    const cTopo = topo && cartaDe(topo);
+    return `<section class="area-fera">${titulo}
+      <section class="mesa">
+        <div class="pilha">
+          <h2>Deck</h2>
+          <button class="monte ${estado.fDeck.length ? 'verso' : 'vazio'}" data-acao="f-comprar" aria-label="Companheiro: comprar 1 carta"><span>${estado.fDeck.length}</span></button>
+          <div class="botoes">
+            <button class="btn pequeno" data-acao="f-comprar" ${estado.fDeck.length ? '' : 'disabled'}>Comprar 1</button>
+            <button class="btn pequeno" data-acao="f-ver-deck" ${estado.fDeck.length ? '' : 'disabled'}>Ver deck</button>
+          </div>
+        </div>
+        <div class="pilha">
+          <h2>Descarte</h2>
+          ${cTopo
+            ? `<button class="monte topo ${classeAtributo(cTopo)}" data-acao="f-ver-descarte" aria-label="Ver descarte do companheiro"><b>${estado.fDescarte.length}</b>${esc(cTopo.nome)}</button>`
+            : '<button class="monte vazio" data-acao="f-ver-descarte" aria-label="Descarte do companheiro vazio">0</button>'}
+          <div class="botoes"><button class="btn pequeno" data-acao="f-ver-descarte" ${estado.fDescarte.length ? '' : 'disabled'}>Ver descarte</button></div>
+        </div>
+        <div class="pilha">
+          <h2>Banidas</h2>
+          <button class="monte vazio" data-acao="f-ver-banidas" aria-label="Ver banidas do companheiro">${estado.fBanidas.length}</button>
+          <div class="botoes"><button class="btn pequeno" data-acao="f-ver-banidas" ${estado.fBanidas.length ? '' : 'disabled'}>Ver banidas</button></div>
+        </div>
+        <div class="pilha recargas">
+          <h2>Recarregar</h2>
+          <span class="contagem-pilha">Embaralha o descarte no deck do companheiro (não gasta recarga)</span>
+          <div class="botoes"><button class="btn pequeno" data-acao="f-recarregar" ${estado.fDescarte.length ? '' : 'disabled'}>Recarregar</button></div>
+        </div>
+      </section>
+      ${htmlPontosFera()}
+      <section class="zona" id="f-campo">
+        <h2>Campo do companheiro <small>${estado.fCampo.length} carta(s)</small></h2>
+        ${estado.fCampo.length ? `<div class="fileira">${estado.fCampo.map((i) => mini(i, 'fCampo')).join('')}</div>` : '<div class="zona-vazia">Nenhuma carta em campo.</div>'}
+      </section>
+      <section class="zona" id="f-mao">
+        <h2>Mão do companheiro <small>${estado.fMao.length} carta(s) · compre pelo deck dele</small></h2>
+        ${estado.fMao.length ? `<div class="fileira">${estado.fMao.map((i) => mini(i, 'fMao')).join('')}</div>` : '<div class="zona-vazia">Mão vazia. Use Comprar 1 no deck do companheiro.</div>'}
+      </section>
+    </section>`;
   }
 
   function renderInicio(p) {
@@ -422,9 +559,17 @@
     const avisos = [];
     if (total < 15) avisos.push(`O deck tem ${total} carta(s); o mínimo é 15.`);
     if (total > 30) avisos.push(`O deck tem ${total} cartas; o máximo é 30.`);
+    const totalFera = totalDe(deckFeraDe(p));
+    const fera = p.companheiro || {};
+    if (totalFera > 10) avisos.push(`O deck do companheiro tem ${totalFera} cartas; o máximo é 10.`);
+    const blocoFera = totalFera
+      ? `<p>O deck do companheiro <b>${esc(fera.nome || fera.familia || 'animal')}</b> tem <b>${totalFera}</b> carta(s).</p>
+        ${ehBestial(p) ? '<label class="opcao-fera"><input type="checkbox" id="juntar-fera"> Embaralhar o deck do companheiro junto com o meu (Bestial)</label>' : '<p class="contagem-pilha">Ele fica separado, com mão, campo e descarte próprios.</p>'}`
+      : '';
     $app.innerHTML = `<div class="inicio">
       <h2>Nova batalha</h2>
       <p>O deck de <b>${esc(p.keyper || 'personagem sem nome')}</b> tem <b>${total}</b> carta(s). Ele será embaralhado e você começa sem cartas na mão.</p>
+      ${blocoFera}
       ${avisos.length ? `<ul>${avisos.map((x) => `<li>${esc(x)}</li>`).join('')}</ul>` : ''}
       <button class="btn grande principal" data-acao="comecar" ${total ? '' : 'disabled'}>Embaralhar e começar</button>
       ${total ? '' : `<a href="${$voltar.href}">Monte o deck primeiro</a>`}
@@ -505,6 +650,8 @@
         ${estado.mao.length ? `<div class="fileira">${estado.mao.map((i) => mini(i, 'mao')).join('')}</div>` : `<div class="zona-vazia">${estado.emRodada ? 'Mão vazia.' : 'Toque em Iniciar rodada para comprar 5 cartas.'}</div>`}
       </section>
 
+      ${htmlAreaFera()}
+
       <details class="historico">
         <summary>Histórico (${estado.historico.length})</summary>
         <ol reversed>${[...estado.historico].reverse().map((h) => `<li>${esc(h)}</li>`).join('')}</ol>
@@ -520,7 +667,12 @@
     const b = e.target.closest('[data-acao]');
     if (!b || b.disabled) return;
     const a = b.dataset.acao;
-    if (a === 'comecar') { const p = personagem(); if (p) novaBatalha(p); }
+    if (a === 'comecar') { const p = personagem(); const j = document.getElementById('juntar-fera'); if (p) novaBatalha(p, !!(j && j.checked)); }
+    else if (a === 'f-comprar') comprarAvulsa(true);
+    else if (a === 'f-recarregar') recarregarFera();
+    else if (a === 'f-ver-deck') { if (estado.fDeck.length) abrirLista('fDeck'); }
+    else if (a === 'f-ver-descarte') { if (estado.fDescarte.length) abrirLista('fDescarte'); }
+    else if (a === 'f-ver-banidas') { if (estado.fBanidas.length) abrirLista('fBanidas'); }
     else if (a === 'iniciar-rodada') iniciarRodada();
     else if (a === 'fim-rodada') fimRodada();
     else if (a === 'comprar') comprarAvulsa();

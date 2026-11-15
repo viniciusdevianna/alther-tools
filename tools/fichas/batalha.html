@@ -144,6 +144,14 @@
   }
   .aviso-flutuante.mostrar { opacity: 1; transform: translateX(-50%) translateY(0); }
 
+  /* Companheiro animal */
+  .area-fera { margin: 8px 0 20px; padding-top: 4px; border-top: 3px dashed var(--ok); }
+  .area-fera .titulo-fera { margin-top: 14px; }
+  .pontos-fera { grid-template-columns: repeat(5, minmax(0, 1fr)); max-width: 640px; }
+  .pata { font-size: 0.85em; }
+  .opcao-fera { display: flex; gap: 8px; align-items: center; font-weight: 700; cursor: pointer; }
+  .opcao-fera input { width: 20px; height: 20px; }
+
   @media (max-width: 720px) {
     .mesa { grid-template-columns: repeat(2, minmax(0, 1fr)); }
     .pontos { grid-template-columns: repeat(4, minmax(0, 1fr)); }

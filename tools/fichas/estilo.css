@@ -326,3 +326,16 @@ input.invalido { border-color: var(--danger); box-shadow: 0 0 0 3px rgba(198,40,
   .grade td:first-child { font-size: 11.5px; letter-spacing: 0; }
   .grade .col-rotulo { width: 34%; }
 }
+
+/* Companheiro animal */
+.niveis-fera { list-style: none; margin: 8px 0 0; padding: 0; display: grid; gap: 4px; font-size: 14px; color: var(--muted); }
+.niveis-fera li.liberado { color: var(--ink); font-weight: 700; }
+.niveis-fera .nv { display: inline-block; min-width: 46px; font-size: 11px; font-weight: 700; letter-spacing: 0.04em; text-transform: uppercase; color: var(--muted); }
+.niveis-fera li.liberado .nv { color: var(--ok); }
+.titulo-fera {
+  display: inline-block; font-family: var(--display); font-weight: 400; font-size: 15px; letter-spacing: 0.05em; color: #fff; background: var(--ok);
+  text-transform: uppercase; margin: 24px 0 10px; padding: 4px 22px 4px 12px; clip-path: polygon(0 0, 100% 0, calc(100% - 12px) 100%, 0 100%);
+}
+.titulo-fera small { font-family: var(--body); letter-spacing: 0; text-transform: none; font-size: 12px; margin-left: 6px; opacity: 0.85; }
+.deck-fera { margin-top: 8px; }
+.deck-linha.bloqueada { opacity: 0.6; }

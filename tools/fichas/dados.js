@@ -346,5 +346,143 @@ window.ALTHER_DADOS = {
       "armaduras": "muito leves",
       "maestria": "recarregar + 1"
     }
+  },
+  "familias": {
+    "Yeji": {
+      "custo": "1T",
+      "atributos": {
+        "corpo": 10,
+        "mente": 12,
+        "foco": 15,
+        "espirito": 8
+      },
+      "pv": 15,
+      "passiva": "Pode nadar em terra fofa.",
+      "niveis": [
+        {
+          "nivel": 1,
+          "texto": "Mordida Venenosa"
+        },
+        {
+          "nivel": 5,
+          "texto": "Investida Tática"
+        },
+        {
+          "nivel": 10,
+          "texto": "Anti-veneno"
+        },
+        {
+          "nivel": 15,
+          "texto": "Aperto Mortal"
+        },
+        {
+          "nivel": 20,
+          "texto": "Diminui 1 no fator de F."
+        }
+      ],
+      "imagem": "imagens/feras/yeji.jpg"
+    },
+    "Kilua": {
+      "custo": "1T",
+      "atributos": {
+        "corpo": 12,
+        "mente": 10,
+        "foco": 8,
+        "espirito": 15
+      },
+      "pv": 20,
+      "passiva": "Pode caminhar sobre águas calmas.",
+      "niveis": [
+        {
+          "nivel": 1,
+          "texto": "Patas Geladas"
+        },
+        {
+          "nivel": 5,
+          "texto": "Uivo da Lua do Norte"
+        },
+        {
+          "nivel": 10,
+          "texto": "Matilha"
+        },
+        {
+          "nivel": 15,
+          "texto": "Queda da Lua do Norte"
+        },
+        {
+          "nivel": 20,
+          "texto": "Diminui 1 do fator de E."
+        }
+      ],
+      "imagem": "imagens/feras/kilua.jpg"
+    },
+    "Carbuncle": {
+      "custo": "1T",
+      "atributos": {
+        "corpo": 8,
+        "mente": 15,
+        "foco": 10,
+        "espirito": 12
+      },
+      "pv": 12,
+      "passiva": "Flutuante.",
+      "niveis": [
+        {
+          "nivel": 1,
+          "texto": "Raio Multicor"
+        },
+        {
+          "nivel": 5,
+          "texto": "Barreira Prismática"
+        },
+        {
+          "nivel": 10,
+          "texto": "Brilho Etéreo"
+        },
+        {
+          "nivel": 15,
+          "texto": "Refração Prismática"
+        },
+        {
+          "nivel": 20,
+          "texto": "Diminui 1 no fator de M."
+        }
+      ],
+      "imagem": "imagens/feras/carbuncle.jpg"
+    },
+    "Baganoir": {
+      "custo": "1T",
+      "atributos": {
+        "corpo": 15,
+        "mente": 8,
+        "foco": 12,
+        "espirito": 10
+      },
+      "pv": 25,
+      "passiva": "Seu movimento padrão é 6 m e pode saltar 3 m.",
+      "niveis": [
+        {
+          "nivel": 1,
+          "texto": "Golpe Concentrado"
+        },
+        {
+          "nivel": 5,
+          "texto": "Bloqueio de Corpo"
+        },
+        {
+          "nivel": 10,
+          "texto": "Sacrifício Tribal"
+        },
+        {
+          "nivel": 15,
+          "texto": "Fúria"
+        },
+        {
+          "nivel": 20,
+          "texto": "Diminui 1 no fator de C."
+        }
+      ],
+      "imagem": "imagens/feras/baganoir.jpg"
+    }
   }
 };

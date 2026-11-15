@@ -1,7 +1,7 @@
 (() => {
   'use strict';
 
-  const { esc, norm, num, CARTAS, cartaPorId, classeAtributo, htmlTags, htmlCorpoCarta, existeBatalha } = window.Alther;
+  const { esc, norm, num, CARTAS, cartaPorId, classeAtributo, htmlTags, htmlCorpoCarta, existeBatalha, ehFera, ATRIBUTOS_FERA, DECK_FERA_MAX, temCompanheiro } = window.Alther;
   const DADOS = window.ALTHER_DADOS || {};
   const CHAVE = window.Alther.CHAVE_FICHAS;
 
@@ -10,6 +10,7 @@
   const DECK_MAX = 30;
   const PC_MAX = 10000;
   const NIVEL_MAX = 10; // nível 10 no caminho = Mestre
+  const NIVEL_FERA_MAX = 20; // nível do companheiro animal (cartas da família liberam nos níveis 1, 5, 10 e 15)
 
   const ATRIBUTOS = [['corpo', 'Corpo'], ['mente', 'Mente'], ['foco', 'Foco'], ['espirito', 'Espírito'], ['social', 'Social'], ['natureza', 'Natureza']];
   const TESTES = [['acertar', 'Acertar'], ['esquivar', 'Esquivar'], ['canalizar', 'Canalizar'], ['restaurar', 'Restaurar'], ['concentrar', 'Concentrar']];
@@ -67,7 +68,11 @@
       dados,
       caminhos: [caminhoVazio()],
       inventario: '', anotacoes: '',
-      companheiro: { nome: '', familia: '', especie: '', dados: '', pv: trio(), am: '', ap: '', mp: '', dano: '', habilidades: [] },
+      companheiro: {
+        nome: '', familia: '', especie: '', nivel: '', pv: trio(), habilidades: [],
+        atributos: Object.fromEntries(ATRIBUTOS_FERA.map(([k]) => [k, { atual: '', total: '' }])),
+        deck: {}, // código da carta -> cópias no deck do companheiro (sem aquisição)
+      },
       adquiridas: {}, // código da carta -> cópias adquiridas
       deck: {}, // código da carta -> cópias no deck
     };
@@ -81,6 +86,7 @@
     out.caminhos = out.caminhos.map((c) => ({ ...caminhoVazio(), ...c }));
     out.caminhos.forEach((c) => { c.mestre = ehMestre(c); });
     if (!Array.isArray(out.companheiro.habilidades)) out.companheiro.habilidades = [];
+    if (!ehObjeto(out.companheiro.deck)) out.companheiro.deck = {};
     if (!ehObjeto(out.deck)) out.deck = {};
     if (!ehObjeto(out.adquiridas)) out.adquiridas = {};
     return out;
@@ -153,6 +159,7 @@
   const adquiridasDoCaminho = (p, nome) => CARTAS.reduce((s, c) => s + (c.caminho === nome ? p.adquiridas[c.id] || 0 : 0), 0);
 
   function motivoNaoAdquirir(p, c) {
+    if (ehFera(c)) return 'Carta de companheiro: monte na aba Deck';
     if (c.caminho && !meusCaminhos(p).has(c.caminho)) return `Só para quem tem o caminho ${c.caminho}`;
     if ((p.adquiridas[c.id] || 0) >= limiteCarta(c)) return limiteCarta(c) === 1 ? 'Única: já adquirida' : `Já tem ${limiteCarta(c)} cópias`;
     const custo = custoAquisicao(c);
@@ -235,6 +242,41 @@
     const ok = problemasDeck(p).length === 0;
     const cls = ok ? 'ok' : total > DECK_MAX ? 'erro' : 'aviso';
     return `<span class="selo ${cls}">Deck ${total}/${DECK_MAX}${ok ? ' ✓' : ''}</span>`;
+  }
+
+  // ---------- deck do companheiro animal ----------
+  // Sem aquisição: as cartas genéricas de fera ficam sempre disponíveis e as da família
+  // liberam pelo nível do companheiro. Até 10 cartas; as genéricas podem passar de 3 cópias.
+  const familiaDe = (p) => (DADOS.familias || {})[p.companheiro.familia] || null;
+  const totalDeckFera = (p) => somar(p.companheiro.deck);
+  const cartasFera = (p) => CARTAS.filter((c) => ehFera(c) && (!c.familia || c.familia === p.companheiro.familia));
+  function motivoNaoPorNoDeckFera(p, c) {
+    if (c.familia && c.familia !== p.companheiro.familia) return `Só para a família ${c.familia}`;
+    if (c.nivelFamilia && (num(p.companheiro.nivel) ?? 0) < c.nivelFamilia) return `Libera no nível ${c.nivelFamilia} do companheiro`;
+    const q = p.companheiro.deck[c.id] || 0;
+    if (q >= limiteCarta(c)) return limiteCarta(c) === 1 ? 'Única: só 1 no deck' : `Máximo de ${limiteCarta(c)} no deck`;
+    if (totalDeckFera(p) >= DECK_FERA_MAX) return `Deck do companheiro cheio (${DECK_FERA_MAX})`;
+    return '';
+  }
+  function alterarDeckFera(p, c, delta) {
+    if (delta > 0 && motivoNaoPorNoDeckFera(p, c)) return;
+    const q = Math.max(0, (p.companheiro.deck[c.id] || 0) + delta);
+    if (q) p.companheiro.deck[c.id] = q;
+    else delete p.companheiro.deck[c.id];
+  }
+  function problemasDeckFera(p) {
+    const lista = [];
+    const total = totalDeckFera(p);
+    if (total > DECK_FERA_MAX) lista.push(`Sobram ${total - DECK_FERA_MAX} carta(s): o máximo é ${DECK_FERA_MAX}.`);
+    const nivel = num(p.companheiro.nivel) ?? 0;
+    for (const [id, q] of Object.entries(p.companheiro.deck)) {
+      const c = cartaPorId.get(id);
+      if (!c) { lista.push(`A carta ${id} do deck do companheiro não existe mais no catálogo.`); continue; }
+      if (c.familia && c.familia !== p.companheiro.familia) lista.push(`${c.nome} é da família ${c.familia}.`);
+      else if (c.nivelFamilia && nivel < c.nivelFamilia) lista.push(`${c.nome} só libera no nível ${c.nivelFamilia} do companheiro.`);
+      if (q > limiteCarta(c)) lista.push(`${c.nome}: ${q} cópias, o limite é ${limiteCarta(c)}.`);
+    }
+    return lista;
   }
 
   // ---------- rotas ----------
@@ -377,6 +419,71 @@
         <div data-extras="${i}">${extrasCaminho(p, c)}</div>
       </div>`).join('');
   }
+  // Carta da família: passiva, cartas liberadas por nível e imagem.
+  function blocoFamilia(p) {
+    const f = familiaDe(p);
+    if (!f) return p.companheiro.familia ? '<p class="motivo">Esta família ainda não tem carta cadastrada.</p>' : '';
+    const nivel = num(p.companheiro.nivel) ?? 0;
+    const niveis = f.niveis.map((n) => `<li class="${nivel >= n.nivel ? 'liberado' : ''}"><span class="nv">Nv ${n.nivel}</span> ${esc(n.texto)}</li>`).join('');
+    return `<details class="info" open><summary><span class="tipo">Família ${esc(p.companheiro.familia)}</span><b>${esc(f.passiva)}</b></summary>
+      <ul class="niveis-fera">${niveis}</ul>
+      <p>Cartas da família liberam no nível indicado; o nível do companheiro vai até ${NIVEL_FERA_MAX}.</p></details>`;
+  }
+  function htmlRetratoFera(p) {
+    const f = familiaDe(p);
+    if (!f || !f.imagem) return '';
+    return `<img src="${esc(f.imagem)}" alt="${esc(p.companheiro.familia)}" loading="lazy" onerror="this.closest('.ident-grade').classList.add('sem-retrato')"><figcaption>${esc(p.companheiro.nome || p.companheiro.familia)}</figcaption>`;
+  }
+  function htmlCompanheiro(p) {
+    const linhas = [
+      ...ATRIBUTOS_FERA.map(([k, t]) => `<tr><td>${t}</td>${celula(`companheiro.atributos.${k}.atual`, `${t} atual do companheiro`)}${celula(`companheiro.atributos.${k}.total`, `${t} total do companheiro`)}<td></td>${botaoRestaurar(`companheiro.atributos.${k}`, `${t} do companheiro`)}</tr>`),
+      `<tr><td>PV</td>${celula('companheiro.pv.atual', 'PV atual do companheiro')}${celula('companheiro.pv.total', 'PV total do companheiro')}${celula('companheiro.pv.temp', 'PV temporário do companheiro')}${botaoRestaurar('companheiro.pv', 'PV do companheiro')}</tr>`,
+    ];
+    const retrato = htmlRetratoFera(p);
+    return `
+        <h2>Companheiro animal</h2>
+        <div class="ident-grade ${retrato ? '' : 'sem-retrato'}">
+          <div class="ident-campos">
+            <div class="campos">
+              ${campo('Nome', 'companheiro.nome', 'dois')}
+              ${selecao('Família', 'companheiro.familia', DADOS.familiasCompanheiro || [])}
+              ${campo('Espécie', 'companheiro.especie')}
+              ${campoNum('Nível', 'companheiro.nivel', `min="0" max="${NIVEL_FERA_MAX}"`)}
+            </div>
+            <div style="margin-top:10px">${grade(['Atual', 'Total', 'Temp', ''], linhas)}</div>
+            <div class="acoes-painel"><button type="button" class="btn pequeno" data-acao="restaurar-companheiro">↺ Restaurar o companheiro</button></div>
+            <div id="familia-info">${blocoFamilia(p)}</div>
+          </div>
+          <figure class="retrato" id="retrato-fera">${retrato}</figure>
+        </div>
+        ${temCompanheiro(p) ? '' : '<p class="motivo">O deck do companheiro fica disponível para personagens com o caminho Druida ou Bestial.</p>'}
+        <h2 style="margin-top:16px">Habilidades do companheiro</h2>
+        <div class="lista-linhas" id="hab-companheiro">${htmlHabilidadesCompanheiro(p)}</div>
+        <div style="margin-top:10px"><button type="button" class="btn pequeno" data-acao="add-hab">+ Habilidade</button></div>`;
+  }
+  // Ao escolher a família, os totais (atributos e PV) passam a ser os da carta.
+  function aplicarFamilia(p) {
+    const f = familiaDe(p);
+    if (!f) return;
+    const ajustar = (obj, total) => {
+      if (total == null) return;
+      obj.total = String(total);
+      const a = num(obj.atual);
+      if (a == null || a > total) obj.atual = String(total);
+    };
+    ATRIBUTOS_FERA.forEach(([k]) => {
+      p.companheiro.atributos[k] = p.companheiro.atributos[k] || { atual: '', total: '' };
+      ajustar(p.companheiro.atributos[k], f.atributos[k]);
+    });
+    ajustar(p.companheiro.pv, f.pv);
+  }
+  function redesenharCompanheiro(p) {
+    const box = document.getElementById('companheiro');
+    if (!box) return;
+    box.innerHTML = htmlCompanheiro(p);
+    preencher(box, p);
+  }
+
   function htmlHabilidadesCompanheiro(p) {
     const hs = p.companheiro.habilidades;
     if (!hs.length) return '<p class="contador">Nenhuma habilidade.</p>';
@@ -463,26 +570,7 @@
         <textarea data-f="anotacoes" aria-label="Anotações" rows="8"></textarea>
       </section>
 
-      <section class="painel largo">
-        <h2>Companheiro animal</h2>
-        <div class="campos">
-          ${campo('Nome', 'companheiro.nome', 'dois')}
-          ${selecao('Família', 'companheiro.familia', DADOS.familiasCompanheiro || [])}
-          ${campo('Espécie', 'companheiro.especie')}
-          ${campo('Dados', 'companheiro.dados')}
-        </div>
-        <div class="campos" style="margin-top:10px">
-          ${campoNum('PV atual', 'companheiro.pv.atual')}
-          ${campoNum('PV total', 'companheiro.pv.total')}
-          ${campoNum('PV temp', 'companheiro.pv.temp')}
-          ${campoNum('AM', 'companheiro.am')}
-          ${campoNum('AP', 'companheiro.ap')}
-          ${campoNum('MP', 'companheiro.mp')}
-          ${campo('Dano', 'companheiro.dano')}
-        </div>
-        <h2 style="margin-top:16px">Habilidades do companheiro</h2>
-        <div class="lista-linhas" id="hab-companheiro">${htmlHabilidadesCompanheiro(p)}</div>
-        <div style="margin-top:10px"><button type="button" class="btn pequeno" data-acao="add-hab">+ Habilidade</button></div>
+      <section class="painel largo" id="companheiro">${htmlCompanheiro(p)}
       </section>
     </form>
     <div class="zona-perigo">
@@ -532,6 +620,10 @@
       const v = num(lerCaminho(p, f));
       if (v != null && (v > max || v < 0)) definir(p, f, String(Math.min(max, Math.max(0, v))));
     }
+    if (f === 'companheiro.nivel') {
+      const v = num(p.companheiro.nivel);
+      if (v != null && (v > NIVEL_FERA_MAX || v < 0)) definir(p, f, String(Math.min(NIVEL_FERA_MAX, Math.max(0, v))));
+    }
     const base = parAtualTotal(f);
     if (base) {
       const a = num(lerCaminho(p, `${base}.atual`));
@@ -568,6 +660,14 @@
     }
     const m = f.match(/^caminhos\.(\d+)\./);
     if (m) atualizarCaminho(p, Number(m[1]));
+    if (f === 'companheiro.familia' && final) { aplicarFamilia(p); redesenharCompanheiro(p); }
+    if (f === 'companheiro.nivel' || (f === 'companheiro.nome' && final)) {
+      const info = document.getElementById('familia-info');
+      if (info) info.innerHTML = blocoFamilia(p);
+      const fig = document.getElementById('retrato-fera');
+      if (fig && f === 'companheiro.nome') fig.innerHTML = htmlRetratoFera(p);
+    }
+    if (m && final && /\.nome$/.test(f)) redesenharCompanheiro(p); // Druida/Bestial muda o aviso do deck
   }
   $app.addEventListener('input', (e) => aoEditar(e, false));
   $app.addEventListener('change', (e) => aoEditar(e, true));
@@ -593,6 +693,7 @@
     </div>`;
   }
   function htmlControles(p, c) {
+    if (ehFera(c)) return `<footer><span class="motivo">Carta de companheiro animal${c.familia ? ` (${esc(c.familia)}${c.nivelFamilia ? `, nível ${c.nivelFamilia}` : ''})` : ''}: monte o deck do companheiro na aba Deck.</span></footer>`;
     const a = p.adquiridas[c.id] || 0;
     const q = p.deck[c.id] || 0;
     return `<footer>
@@ -632,7 +733,10 @@
     const meus = p ? meusCaminhos(p) : null;
     const caminho = filtro.caminho || '';
     return CARTAS.filter((c) => {
-      if (caminho === MEUS) { if (c.caminho && !meus.has(c.caminho)) return false; }
+      if (caminho === MEUS) {
+        if (c.caminho && !meus.has(c.caminho)) return false;
+        if (ehFera(c) && !temCompanheiro(p)) return false;
+      }
       else if (caminho && c.caminho !== caminho) return false;
       if (filtro.tipo && c.tipo !== filtro.tipo) return false;
       if (filtro.classe && !c.classes.includes(filtro.classe)) return false;
@@ -712,7 +816,7 @@
     const ids = new Set([...Object.keys(p.adquiridas), ...Object.keys(p.deck)]);
     const regras = `Regras: de ${DECK_MIN} a ${DECK_MAX} cartas; até 3 cópias de cada carta (cartas com o mesmo nome de deck, como Pummel I, II e III, somam juntas); cartas Únicas, só 1.`;
     if (!ids.size) {
-      $app.innerHTML = `${htmlResumoDeck(p, false)}<div class="vazio">Nenhuma carta adquirida ainda.<br>Adquira cartas pela aba <a href="#/p/${encodeURIComponent(p.id)}/catalogo">Catálogo</a> e depois monte o deck aqui.<br><small>${esc(regras)}</small></div>`;
+      $app.innerHTML = `${htmlResumoDeck(p, false)}<div class="vazio">Nenhuma carta adquirida ainda.<br>Adquira cartas pela aba <a href="#/p/${encodeURIComponent(p.id)}/catalogo">Catálogo</a> e depois monte o deck aqui.<br><small>${esc(regras)}</small></div>${htmlDeckFera(p)}`;
       return;
     }
     const grupos = new Map();
@@ -753,8 +857,46 @@
         <span class="motivo">Números: no deck / adquiridas</span>
       </div>
       ${html || '<div class="vazio">Nenhuma carta no deck.</div>'}
-      <p class="motivo" style="margin-top:16px">${esc(regras)}</p>`;
+      <p class="motivo" style="margin-top:16px">${esc(regras)}</p>
+      ${htmlDeckFera(p)}`;
     $app.querySelectorAll('details.deck-linha').forEach((d) => { if (abertas.has(d.dataset.id)) d.open = true; });
+  }
+
+  // Seção do deck do companheiro na aba Deck (só Druida e Bestial).
+  function htmlDeckFera(p) {
+    if (!temCompanheiro(p)) return '';
+    const nome = p.companheiro.nome || 'Companheiro animal';
+    const cab = `<h2 class="titulo-fera">🐾 Deck do companheiro · ${esc(nome)}</h2>`;
+    if (!p.companheiro.familia) return `<section class="deck-fera">${cab}<div class="vazio">Escolha a família do companheiro na aba Ficha.</div></section>`;
+    const total = totalDeckFera(p);
+    const problemas = problemasDeckFera(p);
+    const nivel = num(p.companheiro.nivel) ?? 0;
+    const ids = new Set([...cartasFera(p).map((c) => c.id), ...Object.keys(p.companheiro.deck)]);
+    const linhas = [...ids].map((id) => cartaPorId.get(id) || { id, nome: id, classes: [], palavras: [] })
+      .sort((a, b) => (a.nivelFamilia || 0) - (b.nivelFamilia || 0) || a.nome.localeCompare(b.nome, 'pt-BR'))
+      .map((c) => {
+        const q = p.companheiro.deck[c.id] || 0;
+        const motivo = cartaPorId.has(c.id) ? motivoNaoPorNoDeckFera(p, c) : 'Fora do catálogo';
+        const bloqueada = c.nivelFamilia && nivel < c.nivelFamilia;
+        const sub = [c.tipo, c.familia ? `Família ${c.familia}${c.nivelFamilia ? ` · Nv ${c.nivelFamilia}` : ''}` : 'Genérica', c.custo ? `Custo ${c.custo}` : ''].filter(Boolean).join(' · ');
+        return `<details class="deck-linha ${classeAtributo(c)} ${q ? 'em-uso' : ''} ${bloqueada ? 'bloqueada' : ''}" data-id="fera-${esc(c.id)}">
+          <summary class="resumo-linha">
+            <span class="nome">${esc(c.nome)} <span class="codigo">${esc(c.id)}</span><small class="sub">${esc(sub)}</small></span>
+            <span class="contas"><span class="qtd-grande">${q}</span></span>
+            <button class="btn pequeno" data-acao="fera-menos" data-carta="${esc(c.id)}" ${q ? '' : 'disabled'} aria-label="Tirar uma do deck do companheiro">−</button>
+            <button class="btn pequeno" data-acao="fera-mais" data-carta="${esc(c.id)}" ${motivo ? 'disabled' : ''} title="${esc(motivo)}" aria-label="Pôr uma no deck do companheiro">+</button>
+          </summary>
+          <div class="corpo">${cartaPorId.has(c.id) ? htmlTags(c) + htmlCorpoCarta(c) : ''}${motivo ? `<p class="motivo">${esc(motivo)}</p>` : ''}</div>
+        </details>`;
+      }).join('');
+    const status = problemas.length ? '<span class="selo erro">Verificar</span>' : `<span class="selo ok">${total}/${DECK_FERA_MAX} ✓</span>`;
+    return `<section class="deck-fera">${cab}
+      <div class="resumo-deck"><span class="contagem">${total} <small>/ ${DECK_FERA_MAX} cartas</small></span>
+        <div class="barra"><i style="width:${Math.min(100, (total / DECK_FERA_MAX) * 100)}%"></i></div>${status}
+        ${problemas.length ? `<ul>${problemas.map((x) => `<li>${esc(x)}</li>`).join('')}</ul>` : ''}</div>
+      <div class="deck-grupo">${linhas || '<div class="vazio">Nenhuma carta de fera no catálogo.</div>'}</div>
+      <p class="motivo">Regras: até ${DECK_FERA_MAX} cartas, sem aquisição. As genéricas de fera (Ataque Corpo a Corpo, Preparar) podem passar de 3 cópias; as da família ${esc(p.companheiro.familia)} liberam pelo nível do companheiro (agora ${nivel}).</p>
+    </section>`;
   }
 
   // ---------- importar / exportar ----------
@@ -837,6 +979,18 @@
       atualizarAbaDeck(p);
       return;
     }
+    if (acao === 'fera-mais' || acao === 'fera-menos') {
+      e.preventDefault();
+      const c = cartaPorId.get(b.dataset.carta);
+      if (acao === 'fera-menos') {
+        const q = p.companheiro.deck[b.dataset.carta] || 0;
+        if (q > 1) p.companheiro.deck[b.dataset.carta] = q - 1;
+        else delete p.companheiro.deck[b.dataset.carta];
+      } else if (c) alterarDeckFera(p, c, 1);
+      salvar(p);
+      renderDeck(p);
+      return;
+    }
     if (acao === 'ver-todas' || acao === 'ver-deck') { modoDeck.soDeck = acao === 'ver-deck'; renderDeck(p); return; }
     if (acao === 'add-caminho' || acao === 'remover-caminho') {
       if (acao === 'add-caminho') p.caminhos.push(caminhoVazio());
@@ -860,8 +1014,10 @@
       preencher(box, p);
       return;
     }
-    if (acao === 'restaurar' || acao === 'restaurar-atributos') {
-      const bases = acao === 'restaurar' ? [b.dataset.base] : ATRIBUTOS.map(([k]) => `atributos.${k}`);
+    if (acao === 'restaurar' || acao === 'restaurar-atributos' || acao === 'restaurar-companheiro') {
+      const bases = acao === 'restaurar' ? [b.dataset.base]
+        : acao === 'restaurar-companheiro' ? [...ATRIBUTOS_FERA.map(([k]) => `companheiro.atributos.${k}`), 'companheiro.pv']
+        : ATRIBUTOS.map(([k]) => `atributos.${k}`);
       const semTotal = [];
       for (const base of bases) {
         const total = lerCaminho(p, `${base}.total`);

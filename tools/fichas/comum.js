@@ -12,6 +12,15 @@ window.Alther = (() => {
   const CARTAS = (window.ALTHER_CARTAS && window.ALTHER_CARTAS.cartas) || [];
   const cartaPorId = new Map(CARTAS.map((c) => [c.id, c]));
 
+  // Companheiro animal: cartas da classe Fera vão para o deck do companheiro (máx. 10),
+  // que só Druida e Bestial usam. O companheiro tem só estes quatro atributos.
+  const ehFera = (c) => (c.classes || []).some((x) => norm(x) === 'fera');
+  const ATRIBUTOS_FERA = [['corpo', 'Corpo'], ['mente', 'Mente'], ['foco', 'Foco'], ['espirito', 'Espírito']];
+  const DECK_FERA_MAX = 10;
+  const CAMINHOS_COM_FERA = ['Druida', 'Bestial'];
+  const temCompanheiro = (p) => !!p && (p.caminhos || []).some((c) => CAMINHOS_COM_FERA.includes(c.nome));
+  const ehBestial = (p) => !!p && (p.caminhos || []).some((c) => c.nome === 'Bestial');
+
   const STATS = [['custo', 'Custo'], ['alcance', 'Alcance'], ['acerto', 'Acerto'], ['defFisica', 'Def. física'], ['defArtistica', 'Def. artística'], ['desequilibrio', 'Desequilíbrio']];
   const temValor = (v) => v !== '' && v != null && norm(v) !== 'na';
 
@@ -46,5 +55,5 @@ window.Alther = (() => {
     try { return !!localStorage.getItem(chaveBatalha(idPersonagem)); } catch (e) { return false; }
   }
 
-  return { CHAVE_FICHAS, chaveBatalha, esc, norm, num, CARTAS, cartaPorId, classeAtributo, htmlTags, htmlCorpoCarta, lerFichas, existeBatalha };
+  return { CHAVE_FICHAS, chaveBatalha, esc, norm, num, CARTAS, cartaPorId, classeAtributo, htmlTags, htmlCorpoCarta, lerFichas, existeBatalha, ehFera, ATRIBUTOS_FERA, DECK_FERA_MAX, temCompanheiro, ehBestial };
 })();
