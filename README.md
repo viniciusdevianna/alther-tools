@@ -77,9 +77,9 @@ Quando um universo é encontrado, o mapa toca uma **animação com som**. Saltar
    - cada caminho tem **PC atual** e **PC total** (até 10.000) e **Nível** (até 10);
    - **Cartas adquiridas** do caminho é contado automaticamente;
    - **Mestre** é automático: o caminho vira Mestre ao chegar no nível 10;
-   - ao escolher a raça, a ficha mostra a habilidade e a restrição raciais; ao escolher um caminho, mostra a intrínseca dele (quando houver). Toque no nome para ver a descrição.
+   - ao escolher a raça, a ficha mostra o **retrato** da raça e a habilidade e a restrição raciais; ao escolher um caminho, mostra a intrínseca dele (quando houver). Toque no nome para ver a descrição, as **armas**, as **armaduras** e a **maestria** do caminho.
 4. **Aba Catálogo**: cada carta tem a cor do seu atributo, como nas cartas físicas: **Corpo** vermelho, **Mente** azul, **Foco** amarelo, **Espírito** roxo, **Natureza** verde e **Social** rosa. O catálogo mostra as cartas com custo, alcance, acerto, defesas, desequilíbrio, efeito e palavras-chave. Dá para buscar (nome, código ou qualquer texto) e filtrar por caminho, tipo, classe, atributo e situação. No personagem, o filtro começa em **Meus caminhos**. Cada carta tem dois controles:
-   - **Adquiridas**: compra uma cópia. Só é possível adquirir cartas dos caminhos que o personagem tem (ou cartas sem caminho). Se a carta tiver **custo de aquisição**, ele é descontado do **PC atual** do caminho, e a aquisição fica bloqueada sem PC suficiente. O **−** desfaz uma aquisição e devolve os PC;
+   - **Adquiridas**: compra uma cópia. Só é possível adquirir cartas dos caminhos que o personagem tem (ou cartas sem caminho). O **custo de aquisição** (coluna "Custo Aquisição", em PC) é descontado do **PC atual** do caminho, e a aquisição fica bloqueada sem PC suficiente. Cartas com essa coluna vazia são gratuitas. O **−** desfaz uma aquisição e devolve os PC;
    - **No deck**: põe ou tira cópias adquiridas do deck.
 5. **Aba Deck**: lista as cartas adquiridas por caminho, com "no deck / adquiridas", e os avisos de regra. Use **Só o deck** para ver apenas o que está no deck. Regras verificadas:
    - o deck tem de **15 a 30 cartas**;
@@ -103,7 +103,8 @@ Quando um universo é encontrado, o mapa toca uma **animação com som**. Saltar
 
 **Atualizando o catálogo e as listas:** os dados vêm das planilhas em `tools/fichas/planilhas/`:
 - `Cartas Alther.xlsx`, aba **Geral**: o catálogo de cartas e a lista de caminhos. Linhas sem nome são ignoradas (cartas ainda não criadas). O **Código** identifica a carta no deck dos jogadores, então não mude o código de uma carta que já existe;
-- `Alther-Ficha-Cartas.xlsx`, aba **Base de Dados**: escolas, raças, arquétipos, aspirações, famílias de companheiro e as descrições das habilidades raciais e intrínsecas.
+- `Alther-Ficha-Cartas.xlsx`, aba **Base de Dados**: escolas, raças, arquétipos, aspirações, famílias de companheiro e as descrições das habilidades raciais e intrínsecas. Cada habilidade fica na mesma linha do seu dono: a intrínseca na linha do caminho (coluna C: nome em O, descrição em P; armas, armaduras e maestria em AA, AB e AC), e a habilidade e a restrição racial na linha correspondente à posição da raça na lista;
+- `tools/fichas/imagens/racas/`: o retrato de cada raça, com o nome da raça sem acentos, espaços ou apóstrofos (`fenirio.jpg`, `quadir.jpg`). Uma raça sem imagem simplesmente não mostra retrato.
 
 Depois de alterar uma planilha (baixe de novo do Google Sheets e substitua o arquivo), rode:
 

@@ -138,6 +138,10 @@ table.grade { width: 100%; border-collapse: collapse; table-layout: fixed; }
 .info summary { cursor: pointer; }
 .info p { margin: 6px 0 0; color: #d2d3dc; }
 .info .tipo { font-size: 11px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--muted); margin-right: 6px; }
+.info .equipamento { margin: 8px 0 0; display: grid; gap: 3px; font-size: 13px; }
+.info .equipamento div { display: flex; gap: 6px; }
+.info .equipamento dt { min-width: 78px; color: var(--muted); }
+.info .equipamento dd { margin: 0; color: #d2d3dc; }
 
 .lista-linhas { display: flex; flex-direction: column; gap: 10px; }
 input.invalido { border-color: var(--danger); box-shadow: 0 0 0 2px rgba(224,117,107,0.25); }
@@ -159,6 +163,39 @@ input.invalido { border-color: var(--danger); box-shadow: 0 0 0 2px rgba(224,117
 .remover:hover { color: var(--danger); border-color: rgba(224,117,107,0.4); }
 .linha-hab { display: grid; grid-template-columns: minmax(120px, 1fr) minmax(0, 2fr) auto; gap: 8px; align-items: start; }
 .linha-hab textarea { min-height: 38px; }
+
+/* Retrato da raça (Identificação) */
+.ident-grade { display: grid; grid-template-columns: minmax(0, 1fr) 220px; gap: 18px; align-items: start; }
+.ident-grade.sem-retrato { grid-template-columns: minmax(0, 1fr); }
+.ident-grade.sem-retrato .retrato { display: none; }
+.ident-campos { min-width: 0; }
+.retrato {
+  position: relative; margin: 0; aspect-ratio: 3 / 4; border-radius: 16px; overflow: hidden; background: var(--field);
+  border: 1px solid var(--brass);
+  box-shadow: 0 0 0 4px rgba(201,163,90,0.10), 0 0 0 5px rgba(201,163,90,0.35), 0 14px 34px rgba(0,0,0,0.55), 0 0 30px rgba(111,227,245,0.10);
+}
+.retrato img { display: block; width: 100%; height: 100%; object-fit: cover; object-position: 50% 18%; animation: retrato-surgir 0.6s ease; }
+.retrato::before { /* filete interno */
+  content: ""; position: absolute; inset: 7px; z-index: 1; border-radius: 11px; pointer-events: none;
+  border: 1px solid rgba(236,208,142,0.35);
+}
+.retrato::after { /* vinheta para o nome */
+  content: ""; position: absolute; inset: 0; pointer-events: none;
+  background: radial-gradient(ellipse at 50% 35%, transparent 55%, rgba(7,11,22,0.45)), linear-gradient(180deg, transparent 58%, rgba(7,11,22,0.92));
+}
+.retrato figcaption {
+  position: absolute; left: 0; right: 0; bottom: 14px; z-index: 2; text-align: center;
+  font-family: var(--display); font-weight: 700; font-size: 19px; letter-spacing: 0.14em; text-transform: uppercase;
+  color: var(--brass-hi); text-shadow: 0 2px 10px rgba(0,0,0,0.8);
+}
+.retrato figcaption::before, .retrato figcaption::after { content: "✦"; font-size: 10px; color: var(--energy); vertical-align: 4px; margin: 0 8px; text-shadow: 0 0 8px var(--energy); }
+@keyframes retrato-surgir { from { opacity: 0; transform: scale(1.04); } to { opacity: 1; transform: none; } }
+@media (prefers-reduced-motion: reduce) { .retrato img { animation: none; } }
+@media (max-width: 720px) {
+  .ident-grade { grid-template-columns: minmax(0, 1fr); }
+  .retrato { order: -1; aspect-ratio: 4 / 3; }
+  .retrato img { object-position: 50% 10%; }
+}
 
 /* Ficha aberta dentro da batalha: só o formulário. */
 .embutida .topo, .embutida .zona-perigo { display: none; }

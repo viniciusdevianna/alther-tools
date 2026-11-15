@@ -14,6 +14,8 @@ Gera dois arquivos:
 Requer openpyxl (pip install openpyxl).
 """
 import json
+import re
+import unicodedata
 import warnings
 from pathlib import Path
 
@@ -27,6 +29,14 @@ FICHA_XLSX = PASTA / "planilhas" / "Alther-Ficha-Cartas.xlsx"
 CARTAS_XLSX = PASTA / "planilhas" / "Cartas Alther.xlsx"
 SAIDA_DADOS = PASTA / "dados.js"
 SAIDA_CARTAS = PASTA / "cartas.js"
+PASTA_RETRATOS = PASTA / "imagens" / "racas"
+
+
+def slug(nome):
+    """'Qua'dir' -> 'quadir', 'Fenírio' -> 'fenirio' (nome do arquivo do retrato)."""
+    s = unicodedata.normalize("NFD", nome)
+    s = "".join(c for c in s if not unicodedata.combining(c)).lower()
+    return re.sub(r"[^a-z0-9]+", "", s)
 
 
 def texto(v):
@@ -57,15 +67,6 @@ def lista(v, separadores="|,."):
 def coluna(ws, col, ini, fim):
     """Valores não vazios de col[ini..fim] (linhas inclusivas)."""
     return [texto(ws[f"{col}{r}"].value) for r in range(ini, fim + 1) if texto(ws[f"{col}{r}"].value)]
-
-
-def pares(ws, col_nome, col_desc, ini, fim):
-    out = []
-    for r in range(ini, fim + 1):
-        nome = texto(ws[f"{col_nome}{r}"].value)
-        if nome:
-            out.append({"nome": nome, "descricao": texto(ws[f"{col_desc}{r}"].value)})
-    return out
 
 
 def ate_vazio(ws, col, ini):
@@ -134,22 +135,35 @@ def base_de_dados(caminhos):
         r += 1
 
     racas = blocos.get("Raças", [])
-    caminhos_ficha = coluna(ws, "C", 2, ate_vazio(ws, "C", 2))
+    # Cada habilidade fica na MESMA LINHA do seu dono: a raça n (A15, A16...) usa a linha n+1
+    # das colunas K/L (habilidade) e M/N (restrição); o caminho da linha r (coluna C) usa O/P
+    # (intrínseca) e AA/AB/AC (armas, armaduras, maestria) da linha r.
+    # Linhas vazias não deslocam as outras.
+    def item(col_nome, col_desc, r):
+        nome = texto(ws[f"{col_nome}{r}"].value)
+        return {"nome": nome, "descricao": texto(ws[f"{col_desc}{r}"].value)} if nome else None
 
-    # Habilidades raciais (K/L) e restrições (M/N) seguem a ordem das raças.
-    raciais = pares(ws, "K", "L", 2, 1 + len(racas))
-    restricoes = pares(ws, "M", "N", 2, 1 + len(racas))
-    por_raca = {}
-    for i, raca in enumerate(racas):
-        por_raca[raca] = {
-            "habilidade": raciais[i] if i < len(raciais) else None,
-            "restricao": restricoes[i] if i < len(restricoes) else None,
-        }
+    por_raca = {raca: {"habilidade": item("K", "L", i + 2), "restricao": item("M", "N", i + 2)} for i, raca in enumerate(racas)}
+    # Retrato da raça: imagens/racas/<slug>.jpg, se existir.
+    for raca, info in por_raca.items():
+        arq = PASTA_RETRATOS / f"{slug(raca)}.jpg"
+        info["retrato"] = f"imagens/racas/{arq.name}" if arq.exists() else None
+    sem_retrato = [r for r, i in por_raca.items() if not i["retrato"]]
+    if sem_retrato:
+        print("aviso: raças sem retrato em imagens/racas/:", ", ".join(sem_retrato))
 
-    # Habilidades intrínsecas (O/P) seguem a ordem dos caminhos da ficha (coluna C).
-    # Só entram as dos caminhos que ainda existem na planilha de cartas.
-    intrinsecas = pares(ws, "O", "P", 2, 1 + len(caminhos_ficha))
-    por_caminho = {c: intrinsecas[i] for i, c in enumerate(caminhos_ficha) if i < len(intrinsecas) and c in caminhos}
+    por_caminho = {}
+    for r in range(2, ate_vazio(ws, "C", 2) + 1):
+        c = texto(ws[f"C{r}"].value)
+        h = item("O", "P", r)
+        if h and c in caminhos:
+            # Armas, armaduras e maestria do caminho (colunas AA, AB e AC da mesma linha).
+            for chave, col in (("armas", "AA"), ("armaduras", "AB"), ("maestria", "AC")):
+                h[chave] = texto(ws[f"{col}{r}"].value)
+            por_caminho[c] = h
+    sem_planilha = [c for c in caminhos if c not in coluna(ws, "C", 2, ate_vazio(ws, "C", 2))]
+    if sem_planilha:
+        print("aviso: caminhos sem linha na Base de Dados (coluna C):", ", ".join(sem_planilha))
 
     # Companheiros animais: famílias em I2..; os blocos "Stats <família>" vêm depois.
     familias = coluna(ws, "I", 2, ate_vazio(ws, "I", 2))

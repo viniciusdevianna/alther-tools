@@ -332,10 +332,24 @@
     const item = (x, tipo, cls) => (x ? `<details class="info ${cls}"><summary><span class="tipo">${tipo}</span><b>${esc(x.nome)}</b></summary><p>${esc(x.descricao)}</p></details>` : '');
     return item(r.habilidade, 'Habilidade racial', '') + item(r.restricao, 'Restrição racial', 'restricao');
   }
+  function htmlRetrato(raca) {
+    const r = DADOS.racial && DADOS.racial[raca];
+    if (!r || !r.retrato) return '';
+    return `<img src="${esc(r.retrato)}" alt="Retrato de ${esc(raca)}" loading="lazy" onerror="this.closest('.ident-grade').classList.add('sem-retrato')"><figcaption>${esc(raca)}</figcaption>`;
+  }
+  function atualizarRetrato(raca) {
+    const fig = document.getElementById('retrato');
+    if (!fig) return;
+    const html = htmlRetrato(raca);
+    fig.innerHTML = html;
+    fig.closest('.ident-grade').classList.toggle('sem-retrato', !html);
+  }
   function blocoIntrinseca(nomeCaminho) {
     const h = DADOS.intrinseca && DADOS.intrinseca[nomeCaminho];
     if (!h) return '';
-    return `<details class="info"><summary><span class="tipo">Intrínseca</span><b>${esc(h.nome)}</b></summary><p>${esc(h.descricao)}</p></details>`;
+    const extras = [['Armas', h.armas], ['Armaduras', h.armaduras], ['Maestria', h.maestria]]
+      .filter(([, v]) => v).map(([r, v]) => `<div><dt>${r}</dt><dd>${esc(v)}</dd></div>`).join('');
+    return `<details class="info"><summary><span class="tipo">Intrínseca</span><b>${esc(h.nome)}</b></summary><p>${esc(h.descricao)}</p>${extras ? `<dl class="equipamento">${extras}</dl>` : ''}</details>`;
   }
   // Partes calculadas de um caminho: cartas adquiridas, selo de Mestre e intrínseca.
   function extrasCaminho(p, c) {
@@ -383,6 +397,8 @@
     <form class="ficha" id="ficha" autocomplete="off" onsubmit="return false">
       <section class="painel largo">
         <h2>Identificação</h2>
+        <div class="ident-grade ${htmlRetrato(p.raca) ? '' : 'sem-retrato'}">
+        <div class="ident-campos">
         <div class="campos">
           ${campo('Keyper', 'keyper', 'dois')}
           ${campo('Jogador', 'jogador', 'dois')}
@@ -396,6 +412,9 @@
           ${campo('Altura', 'altura')}
         </div>
         <div id="racial">${blocoRacial(p.raca)}</div>
+        </div>
+        <figure class="retrato" id="retrato">${htmlRetrato(p.raca)}</figure>
+        </div>
       </section>
 
       <section class="painel largo">
@@ -543,7 +562,10 @@
     else marcarInvalidos($app, p);
     salvar(p);
     if (f === 'keyper') { $titulo.textContent = nomeDe(p); document.title = `${nomeDe(p)} · Fichas e Decks`; }
-    if (f === 'raca') document.getElementById('racial').innerHTML = blocoRacial(p.raca);
+    if (f === 'raca') {
+      document.getElementById('racial').innerHTML = blocoRacial(p.raca);
+      atualizarRetrato(p.raca);
+    }
     const m = f.match(/^caminhos\.(\d+)\./);
     if (m) atualizarCaminho(p, Number(m[1]));
   }

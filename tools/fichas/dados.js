@@ -69,180 +69,282 @@ window.ALTHER_DADOS = {
     "Altalia": {
       "habilidade": {
         "nome": "Voar",
-        "descricao": "Altalia podem voar utilizando uma ação de movimento (em batalha) ou um teste de perícia corporal (fora de batalha). Em batalha eles podem se manter no ar por um turno sem gastos. Fora de batalha eles conseguem se manter por 30 min. Estar voando torna Altalia imunes a ataques rasteiros e concede +2NP na esquiva contra armas curtas. No entanto, recebem -1NP na defesa contra ataques de longa distância."
+        "descricao": "Altalia podem voar utilizando uma ação de movimento e um teste de perícia corporal. Em batalha eles podem se manter no ar por um turno sem gastos. Fora de batalha eles conseguem se manter por 30 min. Em batalha, enquanto voam, Altalia recebem vulnerável(1)."
       },
       "restricao": {
         "nome": "Devoradores de Carne",
         "descricao": "Altalia não conseguem digerir nenhum tipo de planta, nem mesmo ervas de cura, frutas ou qualquer alimento de origem vegetal. Caso haja a ingestão, o altalia passa mal, ficando estafado por um período de 1 a 3 h."
-      }
+      },
+      "retrato": "imagens/racas/altalia.jpg"
     },
     "Fenírio": {
       "habilidade": {
         "nome": "Faro Apurado",
-        "descricao": "Fenírios podem farejar seus inimigos ou aliados. Se um fenírio tiver contato com um cheiro uma vez, ele pode utilizar essa habilidade para rastrear seu alvo com sucesso garantido, em um raio de 20NP km. Em batalha, esta habilidade pode ser utilizada como ação padrão e para sentir o cheiro de um oponente. A partir de então até o fim da batalha o oponente não pode ficar oculto para o fenírio sem disfarçar seu cheiro."
+        "descricao": "Fenírios podem farejar seus inimigos ou aliados. Se um fenírio tiver contato com um cheiro uma vez, ele pode utilizar essa habilidade para rastrear seu alvo com sucesso garantido, em um raio de 10 + NP km."
       },
       "restricao": {
         "nome": "Matilha",
-        "descricao": "Fenírios podem farejar seus inimigos ou aliados. Se um fenírio tiver contato com um cheiro uma vez, ele pode utilizar essa habilidade para rastrear seu alvo com sucesso garantido, em um raio de 20NP km. Em batalha, esta habilidade pode ser utilizada como ação padrão e para sentir o cheiro de um oponente. A partir de então até o fim da batalha o oponente não pode ficar oculto para o fenírio sem disfarçar seu cheiro."
-      }
+        "descricao": "Fenírios não se viram bem sozinhos. Caso estejam isolados do resto de seu bando (que não precisa ser constituído de outros fenírios), eles recebem -1 de Treinamento em qualquer teste de perícia de foco e uivam periodicamente, chamando atenção para si."
+      },
+      "retrato": "imagens/racas/fenirio.jpg"
     },
     "Gollyck": {
       "habilidade": {
-        "nome": "Nado Gollyck",
-        "descricao": "Gollycks podem utilizar essa habilidade como um teste de perícia ou como uma ação de movimento em batalha para nadar. Fora de batalha, esta habilidade concede sucesso garantido em qualquer teste de nadar e também permite que um gollyck nade na areia, lodo e terra fofa, além da água. Em batalha, enquanto nada um gollyck se move duas vezes mais rápido e ganha +NP+5 na defesa contra ataques físicos. Tomar qualquer ação diferente de nadar tira o gollyck deste estado."
+        "nome": "Nadar",
+        "descricao": "Gollycks podem utilizar essa habilidade com um teste de natureza e uma ação de movimento para nadar. Esta habilidade concede sucesso garantido em qualquer teste de nadar e também permite que um gollyck nade na areia, lodo e terra fofa, além da água. Em batalha, enquanto nadam, Gollycks têm o dobro de seu movimento base, mas não podem tomar ações padrão."
       },
       "restricao": {
         "nome": "Face do Medo",
-        "descricao": "Gollycks dificilmente são bem vistos por outras raças. Mesmo que um gollyck seja bondoso e honesto, ele encontrará resistência nas interações sociais, até mesmo com membros de sua própria raça que não tenham crescido com ele. Assim, recebem -2 de Treinamento em qualquer teste de perícia social."
-      }
+        "descricao": "Gollycks dificilmente são bem vistos por outras raças. Mesmo que um gollyck seja bondoso e honesto, ele encontrará resistência nas interações sociais, até mesmo com membros de sua própria raça que não tenham crescido com ele. Assim, recebem -1 de Treinamento em qualquer teste social."
+      },
+      "retrato": "imagens/racas/gollyck.jpg"
     },
     "Lodger": {
       "habilidade": {
         "nome": "Movimento Ás",
-        "descricao": "Lodgers podem utilizar esta habilidade para obter +2NP em testes de perícia que envolvam escalada ou equilíbrio. Além disso, em batalha, eles ganham +1NP em testes de esquiva contra ataques corpo a corpo. Caso a esquiva seja bemsucedida, eles podem usar uma ação livre de movimento para se reposicionar."
+        "descricao": "Lodgers podem utilizar esta habilidade para obter +1 de Treinamento em testes de perícia que envolvam escalada ou equilíbrio. Em batalha, caso se esquivem com sucesso, eles podem usar uma ação livre de movimento para se reposicionar."
       },
       "restricao": {
         "nome": "Pequeninos",
-        "descricao": "Lodgers tem uma constituição muito pequena e, portanto, não podem utilizar armas longas e equipamentos pesados. Em compensação, sua elevada destreza permite que eles operem armas curtas melhor que outras raças, concedendo +1NP no acerto em ataques com elas"
-      }
+        "descricao": "Lodgers tem uma constituição muito pequena e, portanto, não podem utilizar armas longas e equipamentos pesados."
+      },
+      "retrato": "imagens/racas/lodger.jpg"
     },
     "Maek": {
       "habilidade": {
-        "nome": "Diplomacia Maek",
-        "descricao": "Em batalha, maeks podem usar essa habilidade uma vez para convencer um inimigo a ajuda-lo, fazendo um teste social contra a resistência de seus adversários. Esta habilidade só pode ser utilizada contra raças inteligentes. Além disso, maeks recebem +1 de Treinamento em perícias sociais."
+        "nome": "Moeda de Troca",
+        "descricao": "Maeks podem gastar valores para receber bônus de Treinamento em testes de perícia social. A cada 1000 / NP valores gastos, ganhe +1 de bônus de treinamento até o máximo de 4. Além disso, Maeks recebem 10% de desconto em todas as transações comerciais que fazem."
       },
       "restricao": {
-        "nome": "Arte-vulneráveis",
-        "descricao": "Maeks são mais suscetíveis aos efeitos causados pelo contato com a energia extradimensional. Eles têm uma penalidade permanente de -1NP em sua resistência. Além disso, ficam o dobro de turnos a mais afetados por qualquer efeito artístico."
-      }
+        "nome": "Prisioneiros de Alther",
+        "descricao": "Maeks são mais suscetíveis aos efeitos causados pelo contato com a energia artística de outras dimensões. Eles recebem 2 + NP de Pontos de Desequilíbrio a mais quando usam artes."
+      },
+      "retrato": "imagens/racas/maek.jpg"
     },
     "Nuaa": {
       "habilidade": {
         "nome": "Sanguidourado",
-        "descricao": "O sangue dos nuaa concede a eles habilidades mágicas únicas. Toda arte utilizada por eles ganha +1NP no dado de efeito. Caso a arte possua efeito fixo, eles dobram o seu tempo de duração."
+        "descricao": "O sangue dos nuaa concede a eles habilidades mágicas únicas. Eles recebem 2 + NP de bônus em testes para canalizar."
       },
       "restricao": {
         "nome": "Constituição Fraca",
-        "descricao": "Nuaa não têm corpos muito resistentes e por isso são altamente suscetíveis à fadiga, venenos, álcool, etc. Todas as penalidades sofridas em todos esses casos são dobradas para eles. Além disso, realizar testes de perícia corporal seguidos concede -1NP de penalidade acumulativo para cada teste subsequente."
-      }
+        "descricao": "Nuaa não têm corpos muito resistentes e por isso são altamente suscetíveis à fadiga, venenos, álcool, etc. Todas as penalidades sofridas em todos esses casos são dobradas para eles. Além disso, realizar testes de perícia corporal seguidos concede -1 de Treinamento de penalidade acumulativo para cada teste subsequente."
+      },
+      "retrato": "imagens/racas/nuaa.jpg"
     },
     "Paishu": {
       "habilidade": {
         "nome": "Braços de Gigante",
-        "descricao": "Os paishus tem força excepcional quando concentram suas energias nos seus braços. Assim, eles ganham +1NP de dano em todos os seus ataques físicos. Além disso, eles podem utilizar seus braços em uma ação de movimento para andar 2 m a mais (em batalha) ou ganhar +1 de Treinamento em testes de corpo (fora de batalha)."
+        "descricao": "Paishus recebem +1 de Treinamento em testes de corpo que usem a força de seus braços. Além disso, ao utilizar armas e armaduras pesadas eles gastam 1 de atributo a menos."
       },
       "restricao": {
-        "nome": "Enormemente Denso",
-        "descricao": "Paishus são densos demais para nadar ou se equilibrar com facilidade. Eles sofrem -2 de Treinamento de penalidade nestes testes. Em compensação, eles podem aguentar um peso igual a 10 vezes o próprio acima da cabeça."
-      }
+        "nome": "Enormemente Densos",
+        "descricao": "Paishus são densos demais para nadar ou se equilibrar com facilidade. Eles sofrem -1 de Treinamento de penalidade nestes testes."
+      },
+      "retrato": "imagens/racas/paishu.jpg"
     },
     "Qua'dir": {
       "habilidade": {
         "nome": "Hipersalto",
-        "descricao": "Qua’dir podem usar esta habilidade como ação de movimento em uma batalha. Eles saltam até seu movimento normal + 2 m e ignoram qualquer barreira física de menos de 2+NP m de altura. Eles conseguem carregar um objeto ou um indivíduo de até 2x seu próprio peso no salto. Fora de batalha, eles têm sucesso garantido em testes de perícia que envolvam saltar."
+        "descricao": "Qua’dir podem usar esta habilidade como ação de movimento em uma batalha. Eles saltam até seu movimento normal + 2 m e ignoram qualquer barreira física de menos de 3 m de altura. Eles conseguem carregar um objeto ou um indivíduo de até 2x seu próprio peso no salto. Fora de batalha, eles têm sucesso garantido em testes de perícia que envolvam saltar."
       },
       "restricao": {
         "nome": "Hiperatividade",
-        "descricao": "Qua’dir não conseguem ficar parados por muito tempo. Eles dormem apenas 4 horas por dia e precisam de algo para se distrair caso não tenham nada para fazer. Em batalha, eles devem gastar pelo menos uma ação de movimento por turno. Caso sejam impedidos de se mover por um fator externo, eles tomam penalidade de -2NP no dado de acerto de qualquer ataque que realizem."
-      }
+        "descricao": "Qua’dir não conseguem ficar parados por muito tempo. Eles dormem apenas 4 horas por dia e precisam de algo para se distrair caso não tenham nada para fazer. Em batalha, eles devem gastar pelo menos uma ação de movimento por turno. Caso sejam impedidos de se mover por um fator externo, eles tomam penalidade de -2NP ao tentar acertar."
+      },
+      "retrato": "imagens/racas/quadir.jpg"
     },
     "Rae": {
       "habilidade": {
         "nome": "Passo Obscuro",
-        "descricao": "Os rae possuem uma habilidade única de caminhar brevemente pelo limiar das dimensões. Em batalha, o rae pode utilizar 5 pontos de mente para usar essa habilidade como ação padrão e ficar invisível para todos os outros que não sejam rae e que não tenham visão do limiar. Então, ele pode se mover livremente pelo campo. Sua próxima ação padrão cancela este estado. Fora de batalha ele pode fazer um teste de perícia mental para andar invisível. A distância determina a CD do teste"
+        "descricao": "Os rae possuem uma habilidade única de caminhar brevemente pelo limiar das dimensões, uma espécie de dimensão por si só. Para usar esta habilidade em batalha, o rae precisa usar sua ação padrão e de movimento. Ao fim do seu próximo turno ou quando toma qualquer outra ação padrão, o rae sai do limiar. Fora de batalha o rae pode se manter no limiar enquanto conseguir segurar sua respiração."
       },
       "restricao": {
         "nome": "Hematófagos",
-        "descricao": "Rae se alimentam apenas de sangue animal, porém eles gostam muito de sangue. Caso um rae veja sangue vermelho em determinada quantidade ele deve fazer um teste de resistência. Caso fracasse, o rae estará inebriado e receberá -2NP nos dados de acerto de suas ações. A cada turno ele deve refazer o teste, enquanto estiver inebriado."
-      }
+        "descricao": "Rae se alimentam apenas de sangue animal, porém eles gostam muito de sangue. Caso um rae veja sangue vermelho em determinada quantidade ele deve fazer um teste para restaurar. Caso fracasse, o rae estará inebriado e receberá -2NP nos dados de acerto de suas ações. A cada turno ele deve refazer o teste, enquanto estiver inebriado."
+      },
+      "retrato": "imagens/racas/rae.jpg"
     },
     "Saityr": {
       "habilidade": {
         "nome": "Voz da Natureza",
-        "descricao": "Saityres podem se comunicar com animais, utilizando pontos de natureza. Em batalha, como uma ação padrão, o saityr pode comandar um animal selvagem para realizar um ataque simples contra um inimigo. Animais pequenos: 2 ponto; Médios: 4 pontos; Grandes: 10 pontos; Enormes: 20 pontos; Épicos: 40 pontos; Míticos: 50 pontos. Fora dela, o saityr pode fazer pedidos simples e ouvir informações simples dos animais gastando 1 ponto de natureza."
+        "descricao": "Saityres podem se comunicar com animais, utilizando pontos de natureza. Em batalha, como uma ação padrão, o saityr pode comandar um animal selvagem para realizar um ataque simples contra um inimigo. Animais pequenos: 2 pontos; Médios: 4 pontos; Grandes: 10 pontos; Enormes: 20 pontos; Épicos: 40 pontos; Míticos: 50 pontos. Fora dela, o saityr pode fazer pedidos simples e ouvir informações simples dos animais gastando 1 ponto de natureza."
       },
       "restricao": {
         "nome": "Cascos Fendidos",
-        "descricao": "Saityres possuem cascos no lugar dos pés e, desta forma, não conseguem andar em qualquer terreno com facilidade. Terrenos muito fofos (como a areia do deserto) ou muito irregulares (como os vales montanhosos) concedem penalidade de movimento de metade do movimento total do saityr, em batalha ou não. Além disso, eles recebem -1 de Treinamento em testes de perícia de foco."
-      }
+        "descricao": "Saityres possuem cascos no lugar dos pés e, desta forma, não conseguem andar em qualquer terreno com facilidade. Terrenos muito fofos (como a areia do deserto) ou muito irregulares (como os vales montanhosos) concedem penalidade de movimento de metade do movimento total do saityr, em batalha ou não. Além disso, eles recebem -1 de Treinamento em testes de perícia que envolvam equilíbrio."
+      },
+      "retrato": "imagens/racas/saityr.jpg"
     }
   },
   "intrinseca": {
     "Monge": {
       "nome": "Combo",
-      "descricao": "A cada sucesso em um ataque o monge pode jogar dados extras de 1 nível menor que o do ataque anterior para desferir um golpe em sequência no mesmo inimigo. O dano é calculado ao fim do combo. O monge não pode realizar mais que 4 ataques por AP."
+      "descricao": "Uma vez por turno, ao causar dano com uma carta de ataque de corpo, pode jogar uma segunda carta de ataque de corpo em sequência automática tendo o mesmo alvo.",
+      "armas": "luvas, bastões, espadas",
+      "armaduras": "muito leves e leves",
+      "maestria": "acertar + 1"
     },
     "Nébulo": {
       "nome": "Névoa",
-      "descricao": "Utilizando uma ação padrão, nébulos podem se tornar ocultos no campo de batalha. Inimigos podem procurar pelo nébulo realizando um teste de perícia de foco contra a esquiva do nébulo. Tomar uma ação de movimento não cancela o ocultamento"
+      "descricao": "Uma vez por turno, pode jogar qualquer carta de ataque oculta (ativa no fim da rodada, acerto automático).",
+      "armas": "adagas, arcos, tiro, espadas",
+      "armaduras": "muito leves e leves",
+      "maestria": "esquivar + 1"
     },
     "Arcante": {
-      "nome": "Disparo",
-      "descricao": "O arcante pode disparar um raio simples de energia da dimensão que acessa como uma ação padrão, causando 1d8 + M4 de dano em uma pequena área (AOE(1)) onde acerta. Gera 5 PD"
+      "nome": "Equilibrium",
+      "descricao": "Cartas de arte geram metade dos PD totais.",
+      "armas": "bastões, cajados, luvas",
+      "armaduras": "muito leves",
+      "maestria": "canalizar + 1"
     },
     "Shepian": {
       "nome": "Avatar",
-      "descricao": "Shepians conseguem materializar seu espírito e atacar com ele. O espírito dos shepians causa 1d4 + E3 de dano espiritual em caso de sucesso no ataque e atormentam os inimigos, causando E5 de dano espiritual por 2 turnos subsequentes. O espírito dos shepians não pode ser atacado fisicamente, mas pode ser atingido por magia e possuem metade dos PV do shepian. Caso o espírito do shepian seja destruído, este fica atordoado por 3 turnos. Espíritos possuem movimento infinito em batalha."
+      "descricao": "Pode usar cartas de ataque de qualquer atributo como cartas de espírito, cortando seu efeito pela metade. O dano causado por essas cartas também se torna espiritual.",
+      "armas": "bastões, espadas, sabres",
+      "armaduras": "muito leves",
+      "maestria": "restaurar + 1"
     },
     "Hassassin": {
-      "nome": "Bloodpoint",
-      "descricao": "Ataques diretos do hassassin que obtém sucesso fazem seu alvo sangrar (5). Hassassins causam F2 a mais de dano contra inimigos que estejam sangrando e aumentam o fator de sangramento em 1."
+      "nome": "Sanguinário",
+      "descricao": "Ao jogar uma carta de ataque com sucesso, se o alvo estiver com algum malefício, ela tem crítico garantido.",
+      "armas": "espadas, sabres, adagas, tiro",
+      "armaduras": "muito leves e leves",
+      "maestria": "acertar + 2"
     },
     "Evocador": {
       "nome": "Materializar",
-      "descricao": "Evocadores podem, com uma ação padrão, materializar um espírito do vazio que esteja atormentando um inimigo e controla-lo como avatar. Cada espírito possui uma ação de movimento e uma ação padrão controladas pelo evocador. Espíritos se desmaterializam quando sua tormenta termina. Gera 10 de PD por turno materializado por espírito."
+      "descricao": "Uma vez por turno, pode descartar uma carta da mão para colocar uma carta do descarte no lugar.",
+      "armas": "bastões, adagas, luvas",
+      "armaduras": "muito leves",
+      "maestria": "concentrar + 2"
     },
     "Arauto": {
       "nome": "Persona",
-      "descricao": "O arauto utiliza seu avatar espiritual como uma extensão de seu corpo. Ao atacar um oponente fisicamente, o arauto manifesta uma cópia espiritual sua que desfere um segundo golpe no oponente. O golpe da persona causa D2 de dano espiritual. O oponente joga a esquiva duas vezes, uma para cada golpe, mas o acerto da persona é o mesmo do arauto"
+      "descricao": "Ao sobrepor com uma carta de ataque, você pode causar o dano da carta de cima como dano espiritual.",
+      "armas": "luvas, bastões, espadas, sabres",
+      "armaduras": "muito leves e leves",
+      "maestria": "restaurar + 2"
+    },
+    "Ás": {
+      "nome": "Imbuir",
+      "descricao": "Ao jogar ou revelar uma carta de arma, você pode sintonizar automaticamente uma carta de arte da mão e colapsar os dois efeitos em um único alvo.",
+      "armas": "espadas, sabres, bastões, cajados",
+      "armaduras": "muito leves",
+      "maestria": "canalizar + 2"
     },
     "Cruzado": {
-      "nome": "Provocar",
-      "descricao": "Cruzados podem com uma ação padrão provocar um inimigo por 3 turnos. Inimigos provocados atacam apenas o cruzado."
+      "nome": "Inquebrável",
+      "descricao": "Caso uma carta de defesa do usuário não seja esgotada até o fim da rodada, ela permanece ativa em campo.",
+      "armas": "espadas, martelos, bastões, lanças",
+      "armaduras": "leves, pesadas e muito pesadas",
+      "maestria": "acertar + 1"
     },
     "Bardo": {
-      "nome": "Músico",
-      "descricao": "Bardos podem utilizar instrumentos para amplificar suas habilidades. Ao utilizar um instrumento, o bardo ganha 1dF5 nas suas habilidades e causa +F10 de dano artístico irresistível com o instrumento"
+      "nome": "Ritmo",
+      "descricao": "Uma vez por turno, ao descartar uma carta, compre uma carta.",
+      "armas": "adagas, sabres, luvas",
+      "armaduras": "muito leves",
+      "maestria": "recarregar + 1"
     },
     "Druida": {
-      "nome": "Companheiro",
-      "descricao": "Druidas possuem um companheiro animal que começa jovem, porém cresce com seu mestre. O companheiro só age sob comando do druida, utilizando as ações do próprio druida. Ao trocar de caminho, o druida ainda pode comandar seu companheiro, mas perde o acesso às suas habilidades especiais."
+      "nome": "Preservação",
+      "descricao": "Uma vez por fim de rodada, pode manter uma carta de natureza.",
+      "armas": "arcos, cajados, arremesso",
+      "armaduras": "muito leves e leves",
+      "maestria": "esquivar + 1"
     },
     "Paladino": {
-      "nome": "Benção",
-      "descricao": "Paladinos podem abençoar um aliado ou a si mesmo, curando de malefícios não-físicos e expurgando todos os espíritos que o atormentem como uma ação padrão."
+      "nome": "Abençoado",
+      "descricao": "Cartas que concedem defesa concedem também defesa espiritual igual a 50% do total de defesa concedido.",
+      "armas": "espadas, lanças, martelos, bastões",
+      "armaduras": "leves, pesadas e muito pesadas",
+      "maestria": "restaurar + 1"
     },
     "Vibrata": {
       "nome": "Vibrar",
-      "descricao": "Com uma ação padrão, o vibrata pode criar uma barreira de ar à F5 m de seu corpo, concedendo a ele mesmo ou a um aliado C de defesa naquela rodada."
+      "descricao": "Ao utilizar uma carta de armadura, 50% do dano mitigado é causado no agressor.",
+      "armas": "espadas, martelos, luvas",
+      "armaduras": "leves e pesadas",
+      "maestria": "concentrar + 2"
     },
     "Kalinier": {
-      "nome": "Fusão",
-      "descricao": "O kalinier funde seu espírito com o de seu companheiro animal com uma ação padrão, assumindo sua forma fera. Na forma fera o kalinier possui pontos de vida, ações padrão, ações de movimento e dados somados com os de seu companheiro. Todas as habilidades especiais de seu companheiro podem ser utilizadas na forma fera. A forma fera dura E10 turnos e só pode ser ativada novamente depois de um descanso. Gera 10 de PD por turno em que está ativa."
+      "nome": "Conexão",
+      "descricao": "Ao jogar uma carta de um deck auxiliar (exceto de maneira automática), restaure 10 de PD e cure 10% da vida máxima do usuário e de seu companheiro animal.",
+      "armas": "cajados, arcos, arremesso, luvas",
+      "armaduras": "muito leves e leves",
+      "maestria": "canalizar + 1"
     },
     "Chevalier": {
-      "nome": "Proteger",
-      "descricao": "Com uma ação padrão, o chevalier orienta seu espírito para defender um aliado, transferindo todo o dano não mitigado por ele para o chevalier. O efeito dura até que o chevalier dirija seu espírito para outro aliado."
+      "nome": "Imortal",
+      "descricao": "Uma vez por rodada, ao ser atacado, pode utilizar uma carta de defesa do descarte como reação.",
+      "armas": "espadas, martelos, bastões, lanças",
+      "armaduras": "leves, pesadas e muito pesadas",
+      "maestria": "restaurar + 2"
     },
     "Encantador": {
-      "nome": "Encantar",
-      "descricao": "Uma vez por turno o encantador pode, com uma ação padrão, encantar um aliado aleatório não encantado. Um aliado encantado é curado em 1d8 + M2 do encantador todo turno durante 4 turnos. Gera 30 de PD apenas na ativação. O encantador pode, através de sua música, utilizar as habilidades especiais de seu companheiro animal, com uma ação padrão."
+      "nome": "Inspiração",
+      "descricao": "No início da rodada, compre uma carta extra para cada carta que inicie a rodada no seu campo.",
+      "armas": "bastões, cajados, luvas",
+      "armaduras": "muito leves",
+      "maestria": "recarregar + 2"
     },
     "Valete": {
       "nome": "Impulso",
-      "descricao": "Ao utilizar uma ação de movimento antes de sua ação padrão, o valete ganha 1dC4 a mais nos seus dados de acerto por ação de movimento"
+      "descricao": "Após jogar uma carta de movimento, ganha aguçado(5) até o fim da rodada.",
+      "armas": "bastão, lança, arco, sabre",
+      "armaduras": "muito leves e leves",
+      "maestria": "esquivar + 2"
     },
     "Áquila": {
       "nome": "Mira",
-      "descricao": "Áquilas podem mirar em um oponente como uma ação padrão. Seu próximo ataque ou habilidade contra aquele oponente tem F4dZ de sucesso garantido nos seus dados de acerto."
+      "descricao": "Cartas de ataque do usuário possuem 50% a mais de bônus de acerto.",
+      "armas": "arcos, tiro, arremesso",
+      "armaduras": "muito leves e leves",
+      "maestria": "concentrar + 1"
     },
     "Tecnoclasta": {
-      "nome": "Bolsão",
-      "descricao": "Tecnoclastas podem guardar itens de tamanho pequeno em bolsões dimensionais. Eles fabricam itens que só ficam estabilizados dentro dos bolsões. Eles podem abrir um bolsão dimensional à distância com uma ação padrão, gerando 2 de PD e permitindo que eles usem seus itens diretamente sobre o alvo e não precisem jogar seu acerto para atingir o oponente com eles. Os bolsões não podem guardar matéria orgânica. Tecnoclastas conseguem criar M5 bolsões dimensionais de uma vez."
+      "nome": "Reciclagem",
+      "descricao": "Uma vez por rodada, pode colocar uma carta banida no descarte.",
+      "armas": "tiro, luvas, arremesso, adagas",
+      "armaduras": "muito leves e leves",
+      "maestria": "recarregar + 1"
     },
     "Ilusionista": {
       "nome": "Ilusão",
-      "descricao": "Ilusionistas podem com uma ação padrão tomar a forma de um aliado ou oponente apenas para quem ele deseja que assim o veja. A ilusão dura um turno. Ao tomar qualquer ação padrão a ilusão é quebrada. Oponentes que atacam a ilusão ficam confusos e irritados por um turno e desfazem a ilusão."
+      "descricao": "Uma vez por turno, ao jogar uma carta, pode banir uma carta de mesmo custo do descarte e realizar seu efeito como se fosse o da carta jogada. Os atributos ainda são da carta jogada.",
+      "armas": "adagas, sabres, bastões",
+      "armaduras": "muito leves e leves",
+      "maestria": "concentrar + 1"
+    },
+    "Emissário": {
+      "nome": "Recriação",
+      "descricao": "Ao recarregar, restaura metade dos PD.",
+      "armas": "cajados, sabres, luvas",
+      "armaduras": "muito leves e leves",
+      "maestria": "canalizar + 1"
+    },
+    "Cronoclasta": {
+      "nome": "Rebobinar",
+      "descricao": "Uma vez por rodada, ao jogar uma carta de alvo único, você pode escolher banir a carta, pagar seu custo e ativar seu efeito novamente.",
+      "armas": "adagas, tiro, arremesso",
+      "armaduras": "muito leves",
+      "maestria": "acertar + 2"
+    },
+    "Bestial": {
+      "nome": "Fusão",
+      "descricao": "Embaralhe o deck do seu companheiro animal com o seu. Uma vez por rodada, ao jogar uma carta de natureza, você pode jogar outra carta automaticamente.",
+      "armas": "bastões, lanças, luvas, cajados",
+      "armaduras": "leves e pesadas",
+      "maestria": "esquivar + 2"
+    },
+    "Oráculo": {
+      "nome": "Previsão",
+      "descricao": "No fim de cada rodada, olhe X cartas do topo do seu baralho. Em seguida, devolva cada uma delas para o topo ou fundo do baralho, como desejar. X = 1 + número de tokens do usuário no campo.",
+      "armas": "adagas, sabres, luvas, bastões",
+      "armaduras": "muito leves",
+      "maestria": "recarregar + 1"
     }
   }
 };
