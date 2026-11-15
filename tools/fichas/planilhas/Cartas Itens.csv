@@ -1,0 +1,8 @@
+﻿Caminho;Tipo;Classes;Atributo;Código;Nome;Deck Name;Custo;Alcance;Acerto;Defesa Física;Defesa Artística;Desequilíbrio;Efeito;Palavras-chave;Custo Aquisição;Limite no Deck
+;Defesa;Item;Qualquer;I001;Água de Laan;Água de Laan;2;NA;NA;NA;NA;NA;Descarte 1 tormenta espiritual do usuário ou de um aliado adjacente.;;;3
+;Defesa;Item;Qualquer;I002;Calmante;Calmante;1;NA;NA;NA;NA;NA;Descarte 1 tormenta não-espiritual do usuário ou de um aliado adjacente.;;;3
+;Defesa;Item | Única;Qualquer;I003;Infusão de Ramo Divino;Infusão de Ramo Divino;3;NA;NA;NA;NA;NA;Cure 100% dos PV máximos e descarte uma debilidade do usuário ou de um aliado adjacente.;;;1
+;Ataque;Item;Qualquer;I004;Infusão de Veneno;Infusão de Veneno;2;NA;NA;NA;NA;NA;Jogue uma carta de arma sobreposta a esta. Em caso de sucesso no ataque, o alvo está envenenado(5).;Sobrepor;;3
+;Defesa;Item;Qualquer;I005;Medicamento;Medicamento;1;NA;NA;NA;NA;NA;Descarte 1 carta de Lento, Imóvel ou Envenenado do usuário ou de um aliado adjacente.;;;3
+;Defesa;Item;Qualquer;I006;Poção;Poção;1;NA;NA;NA;NA;NA;Cure 25% do PV máximo do usuário ou de um aliado adjacente.;;;3
+;Defesa;Item;Qualquer;I007;Revigorante;Revigorante;2;NA;NA;NA;NA;NA;Concentre 25% do valor máximo de um atributo do usuário ou de um aliado adjacente.;;;3

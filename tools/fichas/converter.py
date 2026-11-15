@@ -5,7 +5,9 @@ Uso (na raiz do projeto ou em qualquer pasta):
     python3 tools/fichas/converter.py
 
 Gera dois arquivos:
-- cartas.js: o catálogo, lido da aba "Geral" de planilhas/Cartas Alther.xlsx.
+- cartas.js: o catálogo, lido da aba "Geral" de planilhas/Cartas Alther.xlsx e, em
+  seguida, dos arquivos planilhas/Cartas *.csv (cartas sem caminho: equipamentos,
+  itens etc.; mesmas colunas da aba "Geral", separadas por ";"), em ordem alfabética.
   Linhas sem nome são ignoradas (cartas ainda não criadas).
 - dados.js: as listas dos selects e as descrições das habilidades raciais e
   intrínsecas, lidas da aba "Base de Dados" de planilhas/Alther-Ficha-Cartas.xlsx.
@@ -13,6 +15,7 @@ Gera dois arquivos:
 
 Requer openpyxl (pip install openpyxl).
 """
+import csv
 import json
 import re
 import unicodedata
@@ -27,6 +30,7 @@ warnings.filterwarnings("ignore", message="Data Validation extension")
 PASTA = Path(__file__).resolve().parent
 FICHA_XLSX = PASTA / "planilhas" / "Alther-Ficha-Cartas.xlsx"
 CARTAS_XLSX = PASTA / "planilhas" / "Cartas Alther.xlsx"
+CSVS_SEM_CAMINHO = sorted((PASTA / "planilhas").glob("Cartas *.csv"))
 SAIDA_DADOS = PASTA / "dados.js"
 SAIDA_CARTAS = PASTA / "cartas.js"
 PASTA_RETRATOS = PASTA / "imagens" / "racas"
@@ -77,39 +81,49 @@ def ate_vazio(ws, col, ini):
     return r - 1
 
 
+def carta(r):
+    """Uma linha da planilha (dict coluna -> valor) no formato do catálogo."""
+    nome = texto(r.get("Nome"))
+    return {
+        "id": texto(r.get("Código")),
+        "nome": nome,
+        "deckName": texto(r.get("Deck Name")) or nome,
+        "caminho": texto(r.get("Caminho")),
+        "tipo": texto(r.get("Tipo")),
+        "classes": lista(r.get("Classes"), "|"),
+        "atributo": texto(r.get("Atributo")),
+        "custo": texto(r.get("Custo")),
+        "alcance": texto(r.get("Alcance")),
+        "acerto": texto(r.get("Acerto")),
+        "defFisica": texto(r.get("Defesa Física")),
+        "defArtistica": texto(r.get("Defesa Artística")),
+        "desequilibrio": texto(r.get("Desequilíbrio")),
+        "efeito": texto(r.get("Efeito")),
+        "palavras": lista(r.get("Palavras-chave")),
+        "custoAquisicao": numero(r.get("Custo Aquisição")),
+        "limite": numero(r.get("Limite no Deck")) or 3,
+    }
+
+
 def cartas():
     wb = openpyxl.load_workbook(CARTAS_XLSX, data_only=True)
     ws = wb["Geral"]
     linhas = ws.iter_rows(values_only=True)
     cab = [texto(c) for c in next(linhas)]
+    registros = [dict(zip(cab, valores)) for valores in linhas]
+    # Cartas sem caminho (equipamentos, itens...), em CSVs com as mesmas colunas da aba "Geral".
+    for arq in CSVS_SEM_CAMINHO:
+        with arq.open(encoding="utf-8-sig", newline="") as f:
+            registros += list(csv.DictReader(f, delimiter=";"))
     out, codigos = [], set()
-    for valores in linhas:
-        r = dict(zip(cab, valores))
+    for r in registros:
         nome, codigo = texto(r.get("Nome")), texto(r.get("Código"))
         if not nome or not codigo:
             continue
         if codigo in codigos:
-            raise SystemExit(f"Código repetido na planilha de cartas: {codigo}")
+            raise SystemExit(f"Código repetido nas planilhas de cartas: {codigo}")
         codigos.add(codigo)
-        out.append({
-            "id": codigo,
-            "nome": nome,
-            "deckName": texto(r.get("Deck Name")) or nome,
-            "caminho": texto(r.get("Caminho")),
-            "tipo": texto(r.get("Tipo")),
-            "classes": lista(r.get("Classes"), "|"),
-            "atributo": texto(r.get("Atributo")),
-            "custo": texto(r.get("Custo")),
-            "alcance": texto(r.get("Alcance")),
-            "acerto": texto(r.get("Acerto")),
-            "defFisica": texto(r.get("Defesa Física")),
-            "defArtistica": texto(r.get("Defesa Artística")),
-            "desequilibrio": texto(r.get("Desequilíbrio")),
-            "efeito": texto(r.get("Efeito")),
-            "palavras": lista(r.get("Palavras-chave")),
-            "custoAquisicao": numero(r.get("Custo Aquisição")),
-            "limite": numero(r.get("Limite no Deck")) or 3,
-        })
+        out.append(carta(r))
     # Caminhos na ordem em que aparecem na planilha (inclui os que ainda não têm cartas prontas).
     caminhos = []
     for valores in ws.iter_rows(min_row=2, values_only=True):
@@ -198,7 +212,7 @@ def escrever_js(caminho, variavel, dados, origem):
 
 if __name__ == "__main__":
     lista_cartas, caminhos = cartas()
-    escrever_js(SAIDA_CARTAS, "ALTHER_CARTAS", {"cartas": lista_cartas}, f"planilhas/{CARTAS_XLSX.name}")
+    escrever_js(SAIDA_CARTAS, "ALTHER_CARTAS", {"cartas": lista_cartas}, f"planilhas/{CARTAS_XLSX.name} e " + ", ".join(a.name for a in CSVS_SEM_CAMINHO))
     escrever_js(SAIDA_DADOS, "ALTHER_DADOS", base_de_dados(caminhos), f"planilhas/{FICHA_XLSX.name} e {CARTAS_XLSX.name}")
     sem = [c for c in caminhos if c not in {x["caminho"] for x in lista_cartas}]
     print(f"{len(lista_cartas)} cartas, {len(caminhos)} caminhos" + (f" (sem cartas prontas: {', '.join(sem)})" if sem else ""))

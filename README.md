@@ -112,7 +112,7 @@ O visual é de mangá: papel com retícula, quadros com contorno de nanquim, tí
    - **Iniciar rodada** compra 5 cartas. **Fim da rodada** leva todas as cartas da mão para o descarte e libera o próximo Iniciar rodada;
    - **Comprar 1** compra uma carta avulsa a qualquer momento (efeitos de cartas ou de personagens);
    - toque numa carta da **mão** para **Jogar** (vai para o campo), **Descartar** ou **Banir**;
-   - **custo das cartas**: jogar uma carta paga o custo com os pontos **atuais do atributo da carta** na ficha (uma carta de Corpo de custo 2 tira 2 do Corpo atual). Sem pontos suficientes, o Jogar fica bloqueado e o custo aparece em vermelho na carta. Os pontos atuais de cada atributo e o PV ficam visíveis na batalha; tocar neles abre a ficha;
+   - **custo das cartas**: jogar uma carta paga o custo com os pontos **atuais do atributo da carta** na ficha (uma carta de Corpo de custo 2 tira 2 do Corpo atual). Itens (custo **X**, atributo **Qualquer**) mostram um **Jogar** por atributo, e o jogador escolhe qual atributo paga. Sem pontos suficientes, o Jogar fica bloqueado e o custo aparece em vermelho na carta. Os pontos atuais de cada atributo e o PV ficam visíveis na batalha; tocar neles abre a ficha;
    - cartas no **campo** ficam lá entre as rodadas até serem descartadas, banidas ou voltarem para a mão;
    - no **descarte**, uma carta pode ser banida, ir para a mão ou ir para o deck (topo, fundo ou embaralhada no deck). O descarte nunca é embaralhado e aparece do topo (mais recente) para baixo;
    - **Ver deck** mostra as cartas do deck em ordem alfabética, sem revelar a ordem real, para buscar uma carta específica. Ao fechar, o deck é embaralhado;
@@ -124,6 +124,8 @@ O visual é de mangá: papel com retícula, quadros com contorno de nanquim, tí
 
 **Atualizando o catálogo e as listas:** os dados vêm das planilhas em `tools/fichas/planilhas/`:
 - `Cartas Alther.xlsx`, aba **Geral**: o catálogo de cartas e a lista de caminhos. Linhas sem nome são ignoradas (cartas ainda não criadas). O **Código** identifica a carta no deck dos jogadores, então não mude o código de uma carta que já existe;
+- `Cartas Equipamentos.csv`: as cartas que não são de caminho (armas, armaduras, escudos, Ataque Desarmado, Postura de Defesa), transcritas das imagens das cartas. Tem as mesmas colunas da aba Geral, separadas por `;`, e abre no Excel/Google Sheets. A coluna Caminho fica vazia, então qualquer personagem pode adquiri-las; os códigos começam com `E` (E001, E002…). Para achá-las no catálogo, filtre pela classe **Equipamento**;
+- `Cartas Itens.csv`: os itens (poções, infusões, medicamentos), no mesmo formato, com códigos `I001`, `I002`…. O custo dos itens é **X** na carta, gravado como atributo **Qualquer**: na batalha, a carta mostra um botão **Jogar** para cada atributo e o jogador escolhe qual paga o custo. Qualquer outro arquivo `Cartas <nome>.csv` nessa pasta também entra no catálogo;
 - `Alther-Ficha-Cartas.xlsx`, aba **Base de Dados**: escolas, raças, arquétipos, aspirações, famílias de companheiro e as descrições das habilidades raciais e intrínsecas. Cada habilidade fica na mesma linha do seu dono: a intrínseca na linha do caminho (coluna C: nome em O, descrição em P; armas, armaduras e maestria em AA, AB e AC), e a habilidade e a restrição racial na linha correspondente à posição da raça na lista;
 - `tools/fichas/imagens/racas/`: o retrato de cada raça, com o nome da raça sem acentos, espaços ou apóstrofos (`fenirio.jpg`, `quadir.jpg`). Uma raça sem imagem simplesmente não mostra retrato.
 

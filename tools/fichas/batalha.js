@@ -62,17 +62,24 @@
   }
 
   // Custo da carta: pago com pontos do atributo atual da própria carta (Corpo, Mente...).
-  function custoDe(c) {
+  // Itens têm atributo "Qualquer" (o X da carta): o jogador escolhe qual atributo paga.
+  // Devolve as formas de pagar; lista vazia = carta sem custo.
+  function custosDe(c) {
     const valor = num(c.custo);
     const chave = norm(c.atributo);
-    if (!valor || valor <= 0 || !ATRIBUTOS.some(([k]) => k === chave)) return null;
-    return { chave, valor, nome: c.atributo };
+    if (!valor || valor <= 0) return [];
+    const opcoes = chave === 'qualquer' ? ATRIBUTOS : ATRIBUTOS.filter(([k]) => k === chave);
+    return opcoes.map(([k, nome]) => ({ chave: k, valor, nome }));
   }
-  function motivoNaoJogar(inst) {
-    const k = custoDe(cartaDe(inst));
-    if (!k) return '';
+  function motivoNaoPagar(k) {
     const disponivel = pontos(k.chave).atual ?? 0;
     return disponivel < k.valor ? `${k.nome} insuficiente: tem ${disponivel}, a carta custa ${k.valor}.` : '';
+  }
+  // Motivo para não poder jogar: só quando nenhuma forma de pagar é possível.
+  function motivoNaoJogar(inst) {
+    const ks = custosDe(cartaDe(inst));
+    if (!ks.length || ks.some((k) => !motivoNaoPagar(k))) return '';
+    return ks.length === 1 ? motivoNaoPagar(ks[0]) : `Nenhum atributo tem ${ks[0].valor} pontos para pagar a carta.`;
   }
 
   // ---------- armazenamento ----------
@@ -200,12 +207,11 @@
     });
   }
 
-  // Jogar: paga o custo com o atributo da carta e coloca a carta no campo.
-  function jogar(inst) {
-    const motivo = motivoNaoJogar(inst);
+  // Jogar: paga o custo com o atributo escolhido (k, de custosDe) e coloca a carta no campo.
+  function jogar(inst, k) {
+    const motivo = k ? motivoNaoPagar(k) : motivoNaoJogar(inst);
     if (motivo) { avisar(motivo); return; }
     const c = cartaDe(inst);
-    const k = custoDe(c);
     acao(() => {
       const i = estado.mao.indexOf(inst);
       if (i < 0) return false;
@@ -243,11 +249,13 @@
     const nome = nomeDe(inst);
     const a = (rotulo, para, texto, extra = {}) => ({ rotulo, fn: () => mover(inst, zona, para, extra.posicao, texto), ...extra });
     if (zona === 'mao') {
+      const ks = custosDe(cartaDe(inst));
+      // Um botão Jogar por forma de pagar (itens: um por atributo).
+      const jogadas = ks.length
+        ? ks.map((k) => ({ rotulo: `Jogar (−${k.valor} ${k.nome})`, fn: () => jogar(inst, k), principal: true, motivo: ks.length > 1 ? '' : motivoNaoPagar(k), bloqueado: !!motivoNaoPagar(k) }))
+        : [{ rotulo: 'Jogar', fn: () => jogar(inst, null), principal: true }];
       return [
-        (() => {
-          const k = custoDe(cartaDe(inst));
-          return { rotulo: k ? `Jogar (−${k.valor} ${k.nome})` : 'Jogar', fn: () => jogar(inst), principal: true, motivo: motivoNaoJogar(inst) };
-        })(),
+        ...jogadas,
         a('Descartar', 'descarte', `Descartou ${nome} da mão.`),
         a('Banir', 'banidas', `Baniu ${nome} da mão.`, { perigo: true }),
       ];
@@ -322,8 +330,9 @@
     const acoes = acoesDe(zona, inst);
     $janela._acoes = acoes.map((x) => x.fn);
     $janela._lista = lista || null;
-    const botoes = acoes.map((x, i) => `<button class="btn ${x.principal ? 'principal' : ''} ${x.perigo ? 'perigo' : ''}" data-j="acao" data-i="${i}" ${x.motivo ? 'disabled' : ''}>${esc(x.rotulo)}</button>`).join('');
-    const motivos = acoes.filter((x) => x.motivo).map((x) => `<p class="aviso-janela">${esc(x.motivo)} Ajuste pela 📜 Ficha se precisar.</p>`).join('');
+    const botoes = acoes.map((x, i) => `<button class="btn ${x.principal ? 'principal' : ''} ${x.perigo ? 'perigo' : ''}" data-j="acao" data-i="${i}" ${x.motivo || x.bloqueado ? 'disabled' : ''}>${esc(x.rotulo)}</button>`).join('');
+    const nenhum = zona === 'mao' && motivoNaoJogar(inst);
+    const motivos = (nenhum ? [{ motivo: nenhum }] : acoes).filter((x) => x.motivo).map((x) => `<p class="aviso-janela">${esc(x.motivo)} Ajuste pela 📜 Ficha se precisar.</p>`).join('');
     abrirJanela(`${ZONAS[zona]}`, `
       <article class="carta ${classeAtributo(c)}">
         <header><h3>${esc(c.nome)}</h3><span class="codigo">${esc(c.id)}</span></header>

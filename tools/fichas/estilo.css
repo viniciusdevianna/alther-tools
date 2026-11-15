@@ -258,6 +258,7 @@ input.invalido { border-color: var(--danger); box-shadow: 0 0 0 3px rgba(198,40,
 .atr-espirito { --atr: #b07cff; --atr-suave: rgba(176,124,255,0.17); }
 .atr-natureza { --atr: #4cc77f; --atr-suave: rgba(76,199,127,0.17); }
 .atr-social { --atr: #f472b6; --atr-suave: rgba(244,114,182,0.17); }
+.atr-qualquer { --atr: #9aa0a6; --atr-suave: rgba(154,160,166,0.18); }
 .carta.atr {
   position: relative; overflow: hidden; padding-top: 20px;
   background: linear-gradient(180deg, var(--atr-suave), transparent 90px), var(--panel);
