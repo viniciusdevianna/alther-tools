@@ -85,7 +85,18 @@ Quando um universo é encontrado, o mapa toca uma **animação com som**. Saltar
    - só entram **cópias adquiridas**;
    - no máximo **3 cópias** (coluna "Limite no Deck") por **nome de deck**: Pummel I, II e III, por exemplo, somam juntas;
    - cartas da classe **Única** só podem ter **1 cópia**, mesmo que a coluna diga outra coisa.
-6. Tudo é salvo automaticamente no navegador. Para não perder nada (ou levar para outro aparelho), use **Exportar** na tela inicial (todos os personagens) ou **Exportar esta ficha** no fim da ficha, e depois **Importar** o arquivo `.json`. Limpar os dados do navegador apaga as fichas.
+6. **Batalha**: o botão **⚔ Batalhar**, no topo da página do personagem, abre `batalha.html`, que funciona como as cartas físicas do deck:
+   - **Embaralhar e começar** embaralha o deck. A batalha começa sem cartas na mão;
+   - **Iniciar rodada** compra 5 cartas. **Fim da rodada** leva todas as cartas da mão para o descarte e libera o próximo Iniciar rodada;
+   - **Comprar 1** compra uma carta avulsa a qualquer momento (efeitos de cartas ou de personagens);
+   - toque numa carta da **mão** para **Jogar** (vai para o campo), **Descartar** ou **Banir**;
+   - cartas no **campo** ficam lá entre as rodadas até serem descartadas, banidas ou voltarem para a mão;
+   - no **descarte**, uma carta pode ser banida, ir para a mão ou ir para o deck (topo, fundo ou embaralhada no deck). O descarte nunca é embaralhado e aparece do topo (mais recente) para baixo;
+   - **Ver deck** mostra as cartas do deck em ordem alfabética, sem revelar a ordem real, para buscar uma carta específica. Ao fechar, o deck é embaralhado;
+   - **Recarregar** devolve o descarte ao deck, embaralha e gasta 1 das **Recargas** atuais da ficha. Fica bloqueado sem recargas;
+   - **↶ Desfazer** volta a última ação (inclusive a recarga gasta) e o **Histórico** lista tudo o que aconteceu;
+   - a batalha fica salva no aparelho: dá para fechar a página e continuar depois (o botão vira **⚔ Continuar batalha**). **Encerrar batalha** apaga o estado das cartas, mas não muda o deck do personagem. Mudanças no deck durante uma batalha só valem na próxima.
+7. Tudo é salvo automaticamente no navegador. Para não perder nada (ou levar para outro aparelho), use **Exportar** na tela inicial (todos os personagens) ou **Exportar esta ficha** no fim da ficha, e depois **Importar** o arquivo `.json`. Limpar os dados do navegador apaga as fichas.
 
 **Atualizando o catálogo e as listas:** os dados vêm das planilhas em `tools/fichas/planilhas/`:
 - `Cartas Alther.xlsx`, aba **Geral**: o catálogo de cartas e a lista de caminhos. Linhas sem nome são ignoradas (cartas ainda não criadas). O **Código** identifica a carta no deck dos jogadores, então não mude o código de uma carta que já existe;
@@ -98,6 +109,8 @@ python3 tools/fichas/converter.py
 ```
 
 O script regenera `tools/fichas/cartas.js` e `tools/fichas/dados.js` (precisa do `openpyxl`: `pip install openpyxl`).
+
+**Arquivos:** `index.html` + `app.js` (fichas, catálogo e deck), `batalha.html` + `batalha.js` (batalha), `comum.js` e `estilo.css` (desenho das cartas, cores e estilos usados pelas duas páginas).
 
 **Localização:** `tools/fichas/`
 

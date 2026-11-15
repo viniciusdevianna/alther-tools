@@ -1,9 +1,9 @@
 (() => {
   'use strict';
 
+  const { esc, norm, num, CARTAS, cartaPorId, classeAtributo, htmlTags, htmlCorpoCarta, existeBatalha } = window.Alther;
   const DADOS = window.ALTHER_DADOS || {};
-  const CARTAS = (window.ALTHER_CARTAS && window.ALTHER_CARTAS.cartas) || [];
-  const CHAVE = 'alther-fichas:v1';
+  const CHAVE = window.Alther.CHAVE_FICHAS;
 
   // Regras
   const DECK_MIN = 15;
@@ -13,7 +13,6 @@
 
   const ATRIBUTOS = [['corpo', 'Corpo'], ['mente', 'Mente'], ['foco', 'Foco'], ['espirito', 'Espírito'], ['social', 'Social'], ['natureza', 'Natureza']];
   const TESTES = [['acertar', 'Acertar'], ['esquivar', 'Esquivar'], ['canalizar', 'Canalizar'], ['restaurar', 'Restaurar'], ['concentrar', 'Concentrar']];
-  const STATS = [['custo', 'Custo'], ['alcance', 'Alcance'], ['acerto', 'Acerto'], ['defFisica', 'Def. física'], ['defArtistica', 'Def. artística'], ['desequilibrio', 'Desequilíbrio']];
 
   const $app = document.getElementById('app');
   const $titulo = document.getElementById('titulo');
@@ -21,13 +20,11 @@
   const $voltar = document.getElementById('voltar');
   const $salvo = document.getElementById('salvo');
   const $arquivo = document.getElementById('arquivo');
+  const $batalhar = document.getElementById('batalhar');
 
   // ---------- utilidades ----------
-  const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
-  const norm = (s) => String(s ?? '').normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase().trim();
   const uid = () => Date.now().toString(36) + Math.random().toString(36).slice(2, 8);
   const ehObjeto = (v) => v !== null && typeof v === 'object' && !Array.isArray(v);
-  const num = (v) => (v === '' || v == null || isNaN(Number(v)) ? null : Number(v));
   const ordenar = (lista) => [...lista].sort((a, b) => a.localeCompare(b, 'pt-BR'));
 
   function lerCaminho(obj, caminho) {
@@ -124,7 +121,6 @@
   const nomeDe = (p) => p.keyper.trim() || 'Personagem sem nome';
 
   // ---------- cartas: aquisição e deck ----------
-  const cartaPorId = new Map(CARTAS.map((c) => [c.id, c]));
   const ehUnica = (c) => c.classes.some((x) => norm(x) === 'unica');
   // Classe Única sempre limita a 1 cópia, mesmo que a coluna "Limite no Deck" diga outra coisa.
   const limiteCarta = (c) => (ehUnica(c) ? 1 : c.limite || 3);
@@ -266,6 +262,7 @@
     $voltar.textContent = voltarTexto;
     $abas.hidden = !abas;
     $abas.innerHTML = abas || '';
+    $batalhar.hidden = true;
   }
   addEventListener('hashchange', () => { render(); scrollTo(0, 0); });
 
@@ -299,6 +296,9 @@
     const abas = [['ficha', 'Ficha'], ['deck', `Deck (${totalDeck(p)})`], ['catalogo', 'Catálogo']]
       .map(([k, t]) => `<a href="${base}/${k}" class="${k === aba ? 'ativa' : ''}" data-aba="${k}">${esc(t)}</a>`).join('');
     cabecalho(nomeDe(p), '#/', '← Fichas', abas);
+    $batalhar.hidden = false;
+    $batalhar.href = `batalha.html#${encodeURIComponent(p.id)}`;
+    $batalhar.textContent = existeBatalha(p.id) ? '⚔ Continuar batalha' : '⚔ Batalhar';
     if (aba === 'deck') renderDeck(p);
     else if (aba === 'catalogo') renderCatalogo(p);
     else renderFicha(p);
@@ -539,30 +539,15 @@
   $app.addEventListener('change', (e) => aoEditar(e, true));
 
   // ---------- exibição de cartas ----------
-  // Classe CSS da cor do atributo (Corpo vermelho, Mente azul, Foco amarelo, Espírito roxo, Natureza verde, Social rosa).
-  const classeAtributo = (c) => (c.atributo ? `atr atr-${norm(c.atributo)}` : 'atr');
-  const temValor = (v) => v !== '' && v != null && norm(v) !== 'na';
-
   function htmlDetalhesCarta(c) {
-    const stats = STATS.filter(([k]) => temValor(c[k])).map(([k, t]) => `<div><dt>${t}</dt><dd>${esc(c[k])}</dd></div>`).join('');
     const extras = [
       custoAquisicao(c) ? `Aquisição: ${custoAquisicao(c)} PC` : '',
       limiteGrupo(c) !== 3 || cartasDoGrupo.get(grupoDe(c)).length > 1
         ? `Limite no deck: ${limiteGrupo(c)}${cartasDoGrupo.get(grupoDe(c)).length > 1 ? ` (somando todas as "${nomeGrupo(c)}")` : ''}` : '',
     ].filter(Boolean);
     return `
-      ${stats ? `<dl class="stats">${stats}</dl>` : ''}
-      ${c.efeito ? `<p class="efeito">${esc(c.efeito)}</p>` : ''}
-      ${c.palavras.length ? `<div class="chips">${c.palavras.map((w) => `<span class="chip">${esc(w)}</span>`).join('')}</div>` : ''}
+      ${htmlCorpoCarta(c)}
       ${extras.length ? `<p class="meta">${extras.map(esc).join(' · ')}</p>` : ''}`;
-  }
-  function htmlTags(c) {
-    return `<div class="tags">
-      ${c.caminho ? `<span class="tag caminho">${esc(c.caminho)}</span>` : '<span class="tag caminho">Sem caminho</span>'}
-      ${c.tipo ? `<span class="tag">${esc(c.tipo)}</span>` : ''}
-      ${c.atributo ? `<span class="tag atributo">${esc(c.atributo)}</span>` : ''}
-      ${c.classes.map((x) => `<span class="tag classe ${norm(x) === 'unica' ? 'unica' : ''}">${esc(x)}</span>`).join('')}
-    </div>`;
   }
   function controle(rotulo, acaoMenos, acaoMais, c, q, podeMenos, motivoMais) {
     return `<div class="controle">
