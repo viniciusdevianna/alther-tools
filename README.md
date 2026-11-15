@@ -72,6 +72,7 @@ Quando um universo é encontrado, o mapa toca uma **animação com som**. Saltar
 1. Abra `tools/fichas/index.html` em qualquer navegador (ou pela página inicial). Não precisa instalar nada.
 2. Na tela inicial, toque em **+ Novo personagem**. Os personagens aparecem em cards com raça, escola, caminhos (★ = Mestre) e a situação do deck.
 3. **Aba Ficha**: identificação (Raça, Arquétipo, Escola e Aspiração são listas), progresso (NP, XP, PD), atributos, dados, caminhos, recursos (PV, recargas, moedas, acessório), inventário, anotações e companheiro animal. Os valores são preenchidos à mão, como na planilha, com estas regras:
+   - o botão **↺** ao lado de cada atributo e do PV restaura o atual para o total; **↺ Restaurar todos os atributos** faz isso com os seis de uma vez (útil depois de uma batalha);
    - um valor **atual nunca passa do total** (atributos, PV, recargas, XP, PC e PV do companheiro). Enquanto você digita, o campo fica vermelho; ao sair dele, o atual é corrigido para o total;
    - cada caminho tem **PC atual** e **PC total** (até 10.000) e **Nível** (até 10);
    - **Cartas adquiridas** do caminho é contado automaticamente;
@@ -90,10 +91,12 @@ Quando um universo é encontrado, o mapa toca uma **animação com som**. Saltar
    - **Iniciar rodada** compra 5 cartas. **Fim da rodada** leva todas as cartas da mão para o descarte e libera o próximo Iniciar rodada;
    - **Comprar 1** compra uma carta avulsa a qualquer momento (efeitos de cartas ou de personagens);
    - toque numa carta da **mão** para **Jogar** (vai para o campo), **Descartar** ou **Banir**;
+   - **custo das cartas**: jogar uma carta paga o custo com os pontos **atuais do atributo da carta** na ficha (uma carta de Corpo de custo 2 tira 2 do Corpo atual). Sem pontos suficientes, o Jogar fica bloqueado e o custo aparece em vermelho na carta. Os pontos atuais de cada atributo e o PV ficam visíveis na batalha; tocar neles abre a ficha;
    - cartas no **campo** ficam lá entre as rodadas até serem descartadas, banidas ou voltarem para a mão;
    - no **descarte**, uma carta pode ser banida, ir para a mão ou ir para o deck (topo, fundo ou embaralhada no deck). O descarte nunca é embaralhado e aparece do topo (mais recente) para baixo;
    - **Ver deck** mostra as cartas do deck em ordem alfabética, sem revelar a ordem real, para buscar uma carta específica. Ao fechar, o deck é embaralhado;
    - **Recarregar** devolve o descarte ao deck, embaralha e gasta 1 das **Recargas** atuais da ficha. Fica bloqueado sem recargas;
+   - **📜 Ficha** abre a ficha do personagem por cima da batalha para ajustar PV, atributos, recargas etc. durante o combate. As mudanças são salvas sozinhas; **Voltar à batalha** fecha a ficha e a mesa continua como estava;
    - **↶ Desfazer** volta a última ação (inclusive a recarga gasta) e o **Histórico** lista tudo o que aconteceu;
    - a batalha fica salva no aparelho: dá para fechar a página e continuar depois (o botão vira **⚔ Continuar batalha**). **Encerrar batalha** apaga o estado das cartas, mas não muda o deck do personagem. Mudanças no deck durante uma batalha só valem na próxima.
 7. Tudo é salvo automaticamente no navegador. Para não perder nada (ou levar para outro aparelho), use **Exportar** na tela inicial (todos os personagens) ou **Exportar esta ficha** no fim da ficha, e depois **Importar** o arquivo `.json`. Limpar os dados do navegador apaga as fichas.

@@ -115,6 +115,15 @@
     timerSalvar = setTimeout(salvarAgora, 400);
   }
   addEventListener('pagehide', () => { if (timerSalvar) salvarAgora(); });
+
+  // Modo embutido: a ficha aberta dentro da batalha (batalha.html), sem navegação.
+  // A batalha pede para salvar antes de fechar a janela; postMessage funciona também abrindo por file://.
+  if (new URLSearchParams(location.search).has('embutida')) document.documentElement.classList.add('embutida');
+  addEventListener('message', (e) => {
+    if (!e.data || e.data.tipo !== 'alther-salvar') return;
+    if (timerSalvar) salvarAgora();
+    if (e.source) e.source.postMessage({ tipo: 'alther-salvo' }, '*');
+  });
   document.addEventListener('visibilitychange', () => { if (document.hidden && timerSalvar) salvarAgora(); });
 
   const buscarPersonagem = (id) => store.personagens.find((p) => p.id === id);
@@ -313,7 +322,9 @@
   const campoNum = (rotulo, f, attrs = '') => `<label class="f"><span>${esc(rotulo)}</span><input type="number" inputmode="numeric" data-f="${f}" ${attrs}></label>`;
   const selecao = (rotulo, f, opcoes, extra = '') => `<label class="f ${extra}"><span>${esc(rotulo)}</span><select data-f="${f}"><option value="">—</option>${opcoes.map((o) => `<option>${esc(o)}</option>`).join('')}</select></label>`;
   const celula = (f, rotulo, tipo = 'number') => `<td><input type="${tipo}" ${tipo === 'number' ? 'inputmode="numeric"' : ''} data-f="${f}" aria-label="${esc(rotulo)}"></td>`;
-  const grade = (titulos, linhas) => `<table class="grade"><thead><tr><th class="col-rotulo"></th>${titulos.map((t) => `<th>${esc(t)}</th>`).join('')}</tr></thead><tbody>${linhas.join('')}</tbody></table>`;
+  // Título '' = coluna estreita do botão de restaurar.
+  const grade = (titulos, linhas) => `<table class="grade"><thead><tr><th class="col-rotulo"></th>${titulos.map((t) => (t ? `<th>${esc(t)}</th>` : '<th class="col-botao"></th>')).join('')}</tr></thead><tbody>${linhas.join('')}</tbody></table>`;
+  const botaoRestaurar = (base, rotulo) => `<td><button type="button" class="restaurar" data-acao="restaurar" data-base="${base}" title="Restaurar ${esc(rotulo)}: atual = total" aria-label="Restaurar ${esc(rotulo)}">↺</button></td>`;
 
   function blocoRacial(raca) {
     const r = DADOS.racial && DADOS.racial[raca];
@@ -364,9 +375,9 @@
   }
 
   function renderFicha(p) {
-    const atributos = ATRIBUTOS.map(([k, t]) => `<tr><td>${t}</td>${celula(`atributos.${k}.atual`, `${t} atual`)}${celula(`atributos.${k}.total`, `${t} total`)}${celula(`atributos.${k}.temp`, `${t} temporário`)}${celula(`atributos.${k}.treino`, `${t} treino`)}</tr>`);
+    const atributos = ATRIBUTOS.map(([k, t]) => `<tr><td>${t}</td>${celula(`atributos.${k}.atual`, `${t} atual`)}${celula(`atributos.${k}.total`, `${t} total`)}${celula(`atributos.${k}.temp`, `${t} temporário`)}${celula(`atributos.${k}.treino`, `${t} treino`)}${botaoRestaurar(`atributos.${k}`, t)}</tr>`);
     const testes = TESTES.map(([k, t]) => `<tr><td>${t}</td>${celula(`dados.${k}.prof`, `${t} proficiência`, 'text')}${celula(`dados.${k}.bonus`, `${t} bônus`)}${celula(`dados.${k}.temp`, `${t} temporário`)}</tr>`);
-    const recursos = [['pv', 'PV'], ['recargas', 'Recargas']].map(([k, t]) => `<tr><td>${t}</td>${celula(`${k}.atual`, `${t} atual`)}${celula(`${k}.total`, `${t} total`)}${celula(`${k}.temp`, `${t} temporário`)}</tr>`);
+    const recursos = [['pv', 'PV'], ['recargas', 'Recargas']].map(([k, t]) => `<tr><td>${t}</td>${celula(`${k}.atual`, `${t} atual`)}${celula(`${k}.total`, `${t} total`)}${celula(`${k}.temp`, `${t} temporário`)}${k === 'pv' ? botaoRestaurar('pv', 'PV') : '<td></td>'}</tr>`);
 
     $app.innerHTML = `
     <form class="ficha" id="ficha" autocomplete="off" onsubmit="return false">
@@ -399,7 +410,8 @@
 
       <section class="painel">
         <h2>Atributos</h2>
-        ${grade(['Atual', 'Total', 'Temp', 'Treino'], atributos)}
+        ${grade(['Atual', 'Total', 'Temp', 'Treino', ''], atributos)}
+        <div class="acoes-painel"><button type="button" class="btn pequeno" data-acao="restaurar-atributos">↺ Restaurar todos os atributos</button></div>
       </section>
 
       <section class="painel">
@@ -415,7 +427,7 @@
 
       <section class="painel">
         <h2>Recursos</h2>
-        ${grade(['Atual', 'Total', 'Temp'], recursos)}
+        ${grade(['Atual', 'Total', 'Temp', ''], recursos)}
         <div class="campos" style="margin-top:10px">
           ${campoNum('Moedas', 'moedas')}
           ${campo('Acessório', 'acessorio')}
@@ -826,6 +838,19 @@
       preencher(box, p);
       return;
     }
+    if (acao === 'restaurar' || acao === 'restaurar-atributos') {
+      const bases = acao === 'restaurar' ? [b.dataset.base] : ATRIBUTOS.map(([k]) => `atributos.${k}`);
+      const semTotal = [];
+      for (const base of bases) {
+        const total = lerCaminho(p, `${base}.total`);
+        if (num(total) == null) { semTotal.push(base); continue; }
+        definir(p, `${base}.atual`, String(total));
+      }
+      if (semTotal.length === bases.length) { alert('Preencha o total primeiro.'); return; }
+      marcarInvalidos($app, p);
+      salvar(p);
+      return;
+    }
     if (acao === 'exportar-um') { baixar(`${nomeArquivo(nomeDe(p))}.json`, { versao: 1, personagens: [p] }); return; }
     if (acao === 'duplicar') {
       const copia = normalizarPersonagem(JSON.parse(JSON.stringify(p)));
@@ -843,6 +868,19 @@
       salvarAgora();
       ir('#/');
     }
+  });
+
+  // A batalha (em outra aba ou na mesma página) gasta pontos de atributo e recargas.
+  // Recarrega os dados para não gravar por cima com valores antigos.
+  addEventListener('storage', (e) => {
+    if (e.key !== CHAVE || timerSalvar) return;
+    const foco = document.activeElement && document.activeElement.dataset ? document.activeElement.dataset.f : null;
+    carregar();
+    const p = personagemDaRota();
+    const r = rotaAtual();
+    if (p && r.aba === 'ficha' && document.getElementById('ficha')) preencher($app, p); // mantém rolagem e foco
+    else render();
+    if (foco) { const el = $app.querySelector(`[data-f="${foco}"]`); if (el) el.focus(); }
   });
 
   carregar();

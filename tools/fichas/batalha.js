@@ -1,10 +1,11 @@
 (() => {
   'use strict';
 
-  const { esc, num, cartaPorId, classeAtributo, htmlTags, htmlCorpoCarta, CHAVE_FICHAS, chaveBatalha, lerFichas } = window.Alther;
+  const { esc, norm, num, cartaPorId, classeAtributo, htmlTags, htmlCorpoCarta, CHAVE_FICHAS, chaveBatalha, lerFichas } = window.Alther;
 
   const MAO_INICIAL = 5;
   const DESFAZER_MAX = 40;
+  const ATRIBUTOS = [['corpo', 'Corpo'], ['mente', 'Mente'], ['foco', 'Foco'], ['espirito', 'Espírito'], ['social', 'Social'], ['natureza', 'Natureza']];
   const ZONAS = { deck: 'Deck', mao: 'Mão', campo: 'Campo', descarte: 'Descarte', banidas: 'Banidas' };
 
   const $app = document.getElementById('app');
@@ -13,6 +14,8 @@
   const $voltar = document.getElementById('voltar');
   const $janela = document.getElementById('janela');
   const $aviso = document.getElementById('aviso');
+  const $painelFicha = document.getElementById('painel-ficha');
+  const $abrirFicha = document.getElementById('abrir-ficha');
 
   const idPersonagem = decodeURIComponent(location.hash.slice(1));
   const CHAVE = chaveBatalha(idPersonagem);
@@ -23,19 +26,53 @@
   let estado = null;
   const pilhaDesfazer = [];
 
-  // ---------- personagem e recargas (ficam na ficha) ----------
+  // ---------- personagem: recargas e pontos de atributo (ficam na ficha) ----------
   const personagem = () => lerFichas().personagens.find((p) => p.id === idPersonagem);
-  function recargas() {
-    const p = personagem();
-    return { atual: num(p && p.recargas && p.recargas.atual), total: num(p && p.recargas && p.recargas.total) };
-  }
-  function gravarRecargas(valor) {
+  const par = (x) => ({ atual: num(x && x.atual), total: num(x && x.total) });
+  function recargas() { const p = personagem(); return par(p && p.recargas); }
+  function pontos(chave) { const p = personagem(); return par(p && p.atributos && p.atributos[chave]); }
+
+  // Lê a ficha mais recente, altera e grava (a ficha pode ter sido editada em outra aba).
+  function alterarFicha(fn) {
     const fichas = lerFichas();
     const p = fichas.personagens.find((x) => x.id === idPersonagem);
     if (!p) return;
-    p.recargas = { ...(p.recargas || {}), atual: valor == null ? '' : String(valor) };
+    fn(p);
     p.atualizadoEm = Date.now();
     localStorage.setItem(CHAVE_FICHAS, JSON.stringify(fichas));
+  }
+  const gravarRecargas = (valor) => alterarFicha((p) => { p.recargas = { ...(p.recargas || {}), atual: valor == null ? '' : String(valor) }; });
+  const gravarAtributo = (chave, valor) => alterarFicha((p) => {
+    p.atributos = p.atributos || {};
+    p.atributos[chave] = { ...(p.atributos[chave] || {}), atual: String(valor) };
+  });
+  // Foto dos valores da ficha que a batalha altera, para o Desfazer devolvê-los.
+  function fotoFicha() {
+    const p = personagem() || {};
+    const at = p.atributos || {};
+    return JSON.stringify({ recargas: (p.recargas && p.recargas.atual) ?? '', atributos: Object.fromEntries(ATRIBUTOS.map(([k]) => [k, (at[k] && at[k].atual) ?? ''])) });
+  }
+  function restaurarFoto(foto) {
+    const f = JSON.parse(foto);
+    alterarFicha((p) => {
+      p.recargas = { ...(p.recargas || {}), atual: f.recargas };
+      p.atributos = p.atributos || {};
+      for (const [k, v] of Object.entries(f.atributos)) p.atributos[k] = { ...(p.atributos[k] || {}), atual: v };
+    });
+  }
+
+  // Custo da carta: pago com pontos do atributo atual da própria carta (Corpo, Mente...).
+  function custoDe(c) {
+    const valor = num(c.custo);
+    const chave = norm(c.atributo);
+    if (!valor || valor <= 0 || !ATRIBUTOS.some(([k]) => k === chave)) return null;
+    return { chave, valor, nome: c.atributo };
+  }
+  function motivoNaoJogar(inst) {
+    const k = custoDe(cartaDe(inst));
+    if (!k) return '';
+    const disponivel = pontos(k.chave).atual ?? 0;
+    return disponivel < k.valor ? `${k.nome} insuficiente: tem ${disponivel}, a carta custa ${k.valor}.` : '';
   }
 
   // ---------- armazenamento ----------
@@ -79,7 +116,7 @@
 
   // Toda ação passa por aqui: guarda o estado anterior (para Desfazer), executa, salva e redesenha.
   function acao(fn) {
-    const antes = { estado: JSON.stringify(estado), recargas: recargas().atual };
+    const antes = { estado: JSON.stringify(estado), ficha: fotoFicha() };
     const resultado = fn();
     if (resultado === false) return;
     pilhaDesfazer.push(antes);
@@ -91,7 +128,7 @@
     const antes = pilhaDesfazer.pop();
     if (!antes) return;
     estado = JSON.parse(antes.estado);
-    if (antes.recargas !== recargas().atual) gravarRecargas(antes.recargas);
+    if (antes.ficha !== fotoFicha()) restaurarFoto(antes.ficha);
     salvar();
     fecharJanela(false);
     render();
@@ -163,6 +200,27 @@
     });
   }
 
+  // Jogar: paga o custo com o atributo da carta e coloca a carta no campo.
+  function jogar(inst) {
+    const motivo = motivoNaoJogar(inst);
+    if (motivo) { avisar(motivo); return; }
+    const c = cartaDe(inst);
+    const k = custoDe(c);
+    acao(() => {
+      const i = estado.mao.indexOf(inst);
+      if (i < 0) return false;
+      estado.mao.splice(i, 1);
+      estado.campo.push(inst);
+      if (k) {
+        const resta = (pontos(k.chave).atual ?? 0) - k.valor;
+        gravarAtributo(k.chave, resta);
+        registrar(`Jogou ${c.nome}: pagou ${k.valor} de ${k.nome} (resta ${resta}).`);
+      } else {
+        registrar(`Jogou ${c.nome}.`);
+      }
+    });
+  }
+
   // Move uma carta entre zonas. posicao (só para o deck): 'topo' | 'fundo' | 'embaralhar'.
   function mover(inst, de, para, posicao, texto) {
     acao(() => {
@@ -186,7 +244,10 @@
     const a = (rotulo, para, texto, extra = {}) => ({ rotulo, fn: () => mover(inst, zona, para, extra.posicao, texto), ...extra });
     if (zona === 'mao') {
       return [
-        a('Jogar', 'campo', `Jogou ${nome}.`, { principal: true }),
+        (() => {
+          const k = custoDe(cartaDe(inst));
+          return { rotulo: k ? `Jogar (−${k.valor} ${k.nome})` : 'Jogar', fn: () => jogar(inst), principal: true, motivo: motivoNaoJogar(inst) };
+        })(),
         a('Descartar', 'descarte', `Descartou ${nome} da mão.`),
         a('Banir', 'banidas', `Baniu ${nome} da mão.`, { perigo: true }),
       ];
@@ -261,13 +322,15 @@
     const acoes = acoesDe(zona, inst);
     $janela._acoes = acoes.map((x) => x.fn);
     $janela._lista = lista || null;
-    const botoes = acoes.map((x, i) => `<button class="btn ${x.principal ? 'principal' : ''} ${x.perigo ? 'perigo' : ''}" data-j="acao" data-i="${i}">${esc(x.rotulo)}</button>`).join('');
+    const botoes = acoes.map((x, i) => `<button class="btn ${x.principal ? 'principal' : ''} ${x.perigo ? 'perigo' : ''}" data-j="acao" data-i="${i}" ${x.motivo ? 'disabled' : ''}>${esc(x.rotulo)}</button>`).join('');
+    const motivos = acoes.filter((x) => x.motivo).map((x) => `<p class="aviso-janela">${esc(x.motivo)} Ajuste pela 📜 Ficha se precisar.</p>`).join('');
     abrirJanela(`${ZONAS[zona]}`, `
       <article class="carta ${classeAtributo(c)}">
         <header><h3>${esc(c.nome)}</h3><span class="codigo">${esc(c.id)}</span></header>
         ${htmlTags(c)}
         ${htmlCorpoCarta(c)}
       </article>
+      ${motivos}
       ${botoes ? `<div class="acoes-carta">${botoes}</div>` : ''}`, lista ? () => abrirLista(lista.zona) : null);
   }
 
@@ -299,12 +362,43 @@
     $janela._lista = { zona };
   }
 
+  // ---------- ficha por cima da batalha ----------
+  // A ficha abre num iframe (index.html em modo embutido) para editar PV, atributos etc.
+  // sem sair da batalha. Um iframe novo a cada abertura garante dados atualizados.
+  function abrirFicha() {
+    const corpo = $painelFicha.querySelector('.painel-corpo');
+    corpo.innerHTML = `<iframe src="index.html?embutida#/p/${encodeURIComponent(idPersonagem)}/ficha" title="Ficha do personagem"></iframe>`;
+    $painelFicha.showModal();
+  }
+  let fechandoFicha = false;
+  function fecharFicha() {
+    if (fechandoFicha) return;
+    fechandoFicha = true;
+    const iframe = $painelFicha.querySelector('iframe');
+    const concluir = () => {
+      removeEventListener('message', aoSalvar);
+      $painelFicha.close();
+      $painelFicha.querySelector('.painel-corpo').innerHTML = '';
+      fechandoFicha = false;
+      render(); // recargas podem ter mudado
+    };
+    const aoSalvar = (e) => { if (e.data && e.data.tipo === 'alther-salvo') { clearTimeout(limite); concluir(); } };
+    // Pede para a ficha gravar o que ainda está pendente antes de fechar.
+    const limite = setTimeout(concluir, 600);
+    addEventListener('message', aoSalvar);
+    try { iframe.contentWindow.postMessage({ tipo: 'alther-salvar' }, '*'); } catch (e) { clearTimeout(limite); concluir(); }
+  }
+  $abrirFicha.addEventListener('click', abrirFicha);
+  document.getElementById('fechar-ficha').addEventListener('click', fecharFicha);
+  $painelFicha.addEventListener('cancel', (e) => { e.preventDefault(); fecharFicha(); });
+
   // ---------- desenho ----------
   function mini(inst, zona) {
     const c = cartaDe(inst);
+    const caro = zona === 'mao' && !!motivoNaoJogar(inst);
     const nums = [['Custo', c.custo], ['Alc.', c.alcance], ['Acerto', c.acerto]]
       .filter(([, v]) => v !== '' && v != null && v !== 'NA' && v !== '-')
-      .map(([t, v]) => `<span>${t} <b>${esc(v)}</b></span>`).join('');
+      .map(([t, v]) => `<span class="${t === 'Custo' && caro ? 'caro' : ''}" ${t === 'Custo' && caro ? 'title="Pontos insuficientes"' : ''}>${t} <b>${esc(v)}</b></span>`).join('');
     return `<button class="mini ${classeAtributo(c)}" data-inst="${inst}" data-zona="${zona}">
       <h3>${esc(c.nome)}</h3>
       <span class="sub">${esc([c.tipo, ...(c.classes || [])].filter(Boolean).join(' · '))}</span>
@@ -336,6 +430,8 @@
       return;
     }
     $titulo.textContent = p.keyper || 'Batalha';
+    $abrirFicha.hidden = false;
+    $painelFicha.querySelector('h2').textContent = `Ficha · ${p.keyper || 'Personagem'}`;
     document.title = `Batalha · ${p.keyper || 'Personagem'}`;
     if (!estado) { renderInicio(p); return; }
 
@@ -373,6 +469,14 @@
           <span class="contagem-pilha">${semRecarga ? 'Sem recargas' : 'Embaralha o descarte no deck'}</span>
           <div class="botoes"><button class="btn pequeno" data-acao="recarregar" ${estado.descarte.length && !semRecarga ? '' : 'disabled'}>Recarregar</button></div>
         </div>
+      </section>
+
+      <section class="pontos" aria-label="Pontos atuais da ficha">
+        ${ATRIBUTOS.map(([k, t]) => {
+          const v = pontos(k);
+          return `<button class="ponto atr atr-${k}" data-acao="abrir-ficha" title="${t}: atual / total"><span>${t}</span><b>${v.atual ?? '—'}</b>${v.total != null ? `<small>/ ${v.total}</small>` : ''}</button>`;
+        }).join('')}
+        ${(() => { const v = par(personagem().pv); return `<button class="ponto pv" data-acao="abrir-ficha" title="PV: atual / total"><span>PV</span><b>${v.atual ?? '—'}</b>${v.total != null ? `<small>/ ${v.total}</small>` : ''}</button>`; })()}
       </section>
 
       <div class="turno">
@@ -413,6 +517,7 @@
     else if (a === 'comprar') comprarAvulsa();
     else if (a === 'recarregar') recarregar();
     else if (a === 'desfazer') desfazer();
+    else if (a === 'abrir-ficha') abrirFicha();
     else if (a === 'ver-deck') { if (estado.deck.length) abrirLista('deck'); }
     else if (a === 'ver-descarte') { if (estado.descarte.length) abrirLista('descarte'); }
     else if (a === 'ver-banidas') { if (estado.banidas.length) abrirLista('banidas'); }

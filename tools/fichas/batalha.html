@@ -41,6 +41,20 @@
   .contagem-pilha { font-size: 13px; color: var(--muted); }
   .recargas b { font-family: var(--display); font-size: 26px; color: var(--brass-hi); }
 
+  /* Pontos atuais (custo das cartas) */
+  .pontos { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 8px; margin-bottom: 14px; }
+  .ponto {
+    display: flex; flex-direction: column; align-items: center; gap: 0; padding: 7px 4px; cursor: pointer; font: inherit; color: var(--text);
+    background: linear-gradient(180deg, var(--atr-suave, rgba(201,163,90,0.12)), var(--panel)); border: 1px solid rgba(201,163,90,0.2);
+    border-top: 3px solid var(--atr, var(--brass)); border-radius: 10px; min-width: 0;
+  }
+  .ponto span { font-size: 11px; letter-spacing: 0.05em; text-transform: uppercase; color: var(--muted); }
+  .ponto b { font-family: var(--display); font-size: 22px; line-height: 1.15; color: var(--text); }
+  .ponto small { font-size: 11px; color: var(--muted); }
+  .ponto.pv { --atr: var(--ok); }
+  .mini .nums span.caro { background: rgba(224,117,107,0.25); color: var(--danger); }
+  .mini .nums span.caro b { color: var(--danger); }
+
   .turno { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; margin-bottom: 18px; }
   .btn.grande { min-height: 52px; padding: 10px 24px; font-family: var(--display); font-size: 17px; letter-spacing: 0.06em; }
   .btn.desfazer { margin-left: auto; }
@@ -93,6 +107,18 @@
   .item-lista small { color: var(--muted); font-size: 12px; }
   .item-lista .pos { font-size: 11px; color: var(--muted); min-width: 34px; }
 
+  /* Ficha aberta por cima da batalha */
+  dialog.painel-ficha {
+    width: 100vw; height: 100vh; height: 100dvh; max-width: none; max-height: none; margin: 0; border-radius: 0; border: 0;
+    display: none; flex-direction: column;
+  }
+  dialog.painel-ficha[open] { display: flex; }
+  .painel-ficha .janela-topo { padding-top: max(12px, env(safe-area-inset-top)); }
+  .painel-ficha .janela-topo .contagem-pilha { margin-left: auto; }
+  .painel-corpo { flex: 1; min-height: 0; }
+  .painel-corpo iframe { display: block; width: 100%; height: 100%; border: 0; background: var(--bg); }
+  @media (max-width: 520px) { .painel-ficha .janela-topo .contagem-pilha { display: none; } }
+
   .historico summary { cursor: pointer; color: var(--muted); font-size: 13px; }
   .historico ol { margin: 8px 0 0; padding-left: 22px; font-size: 13px; color: #c7c8d2; max-height: 260px; overflow: auto; }
   .fim { margin-top: 24px; display: flex; justify-content: flex-end; }
@@ -110,6 +136,7 @@
 
   @media (max-width: 720px) {
     .mesa { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .pontos { grid-template-columns: repeat(4, minmax(0, 1fr)); }
     .btn.grande { flex: 1; }
     .btn.desfazer { margin-left: 0; }
     .fileira { grid-template-columns: repeat(2, minmax(0, 1fr)); }
@@ -119,13 +146,22 @@
 <body>
 <div class="topo">
   <div class="topo-linha">
-    <a class="voltar" id="voltar" href="./">← Ficha</a>
+    <a class="voltar" id="voltar" href="./">← Deck</a>
     <h1 id="titulo">Batalha</h1>
     <span class="rodada" id="rodada"></span>
+    <button class="btn batalhar" id="abrir-ficha" hidden>📜 Ficha</button>
   </div>
 </div>
 <main id="app"></main>
 <dialog id="janela"></dialog>
+<dialog id="painel-ficha" class="painel-ficha" aria-label="Ficha do personagem">
+  <div class="janela-topo">
+    <h2>Ficha</h2>
+    <span class="contagem-pilha">As mudanças são salvas sozinhas</span>
+    <button class="btn principal" id="fechar-ficha">Voltar à batalha</button>
+  </div>
+  <div class="painel-corpo"></div>
+</dialog>
 <div class="aviso-flutuante" id="aviso" role="status" aria-live="polite"></div>
 
 <script src="cartas.js"></script>

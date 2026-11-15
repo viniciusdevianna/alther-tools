@@ -121,6 +121,13 @@ table.grade { width: 100%; border-collapse: collapse; table-layout: fixed; }
 .grade td:first-child { font-family: var(--display); font-size: 13px; letter-spacing: 0.04em; color: var(--brass-hi); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .grade input { padding: 6px 4px; }
 .grade .col-rotulo { width: 30%; }
+.grade .col-botao { width: 38px; }
+.restaurar {
+  width: 34px; height: 34px; padding: 0; border-radius: 8px; cursor: pointer; font-size: 17px; line-height: 1;
+  background: none; border: 1px solid rgba(201,163,90,0.3); color: var(--brass);
+}
+.restaurar:hover, .restaurar:focus-visible { border-color: var(--energy); color: var(--energy); outline: none; }
+.acoes-painel { display: flex; justify-content: flex-end; margin-top: 10px; }
 
 .info {
   margin-top: 10px; padding: 9px 11px; border-radius: 9px; background: var(--energy-soft);
@@ -153,6 +160,9 @@ input.invalido { border-color: var(--danger); box-shadow: 0 0 0 2px rgba(224,117
 .linha-hab { display: grid; grid-template-columns: minmax(120px, 1fr) minmax(0, 2fr) auto; gap: 8px; align-items: start; }
 .linha-hab textarea { min-height: 38px; }
 
+/* Ficha aberta dentro da batalha: só o formulário. */
+.embutida .topo, .embutida .zona-perigo { display: none; }
+.embutida main { padding-top: 14px; }
 .zona-perigo { margin-top: 22px; display: flex; flex-wrap: wrap; gap: 8px; justify-content: flex-end; }
 
 /* Catálogo e deck */
