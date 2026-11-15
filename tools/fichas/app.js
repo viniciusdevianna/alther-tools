@@ -539,6 +539,8 @@
   $app.addEventListener('change', (e) => aoEditar(e, true));
 
   // ---------- exibição de cartas ----------
+  // Classe CSS da cor do atributo (Corpo vermelho, Mente azul, Foco amarelo, Espírito roxo, Natureza verde, Social rosa).
+  const classeAtributo = (c) => (c.atributo ? `atr atr-${norm(c.atributo)}` : 'atr');
   const temValor = (v) => v !== '' && v != null && norm(v) !== 'na';
 
   function htmlDetalhesCarta(c) {
@@ -558,7 +560,7 @@
     return `<div class="tags">
       ${c.caminho ? `<span class="tag caminho">${esc(c.caminho)}</span>` : '<span class="tag caminho">Sem caminho</span>'}
       ${c.tipo ? `<span class="tag">${esc(c.tipo)}</span>` : ''}
-      ${c.atributo ? `<span class="tag">${esc(c.atributo)}</span>` : ''}
+      ${c.atributo ? `<span class="tag atributo">${esc(c.atributo)}</span>` : ''}
       ${c.classes.map((x) => `<span class="tag classe ${norm(x) === 'unica' ? 'unica' : ''}">${esc(x)}</span>`).join('')}
     </div>`;
   }
@@ -582,7 +584,7 @@
   function htmlCarta(c, p) {
     const a = p ? p.adquiridas[c.id] || 0 : 0;
     const q = p ? p.deck[c.id] || 0 : 0;
-    return `<article class="carta ${q ? 'no-deck' : a ? 'adquirida' : ''}" data-id="${esc(c.id)}">
+    return `<article class="carta ${classeAtributo(c)} ${q ? 'no-deck' : a ? 'adquirida' : ''}" data-id="${esc(c.id)}">
       <header><h3>${esc(c.nome)}</h3><span class="codigo">${esc(c.id)}</span></header>
       ${htmlTags(c)}
       ${htmlDetalhesCarta(c)}
@@ -713,7 +715,7 @@
             <button class="btn pequeno perigo" data-acao="esquecer" data-carta="${esc(id)}">Remover</button></div></div>`;
         }
         const motivo = motivoNaoPorNoDeck(p, c);
-        return `<details class="deck-linha ${q ? 'em-uso' : ''}" data-id="${esc(id)}">
+        return `<details class="deck-linha ${classeAtributo(c)} ${q ? 'em-uso' : ''}" data-id="${esc(id)}">
           <summary class="resumo-linha">
             <span class="nome">${esc(c.nome)} <span class="codigo">${esc(c.id)}</span><small class="sub">${esc([c.tipo, ...c.classes].filter(Boolean).join(' · '))}</small></span>
             <span class="contas"><span class="qtd-grande">${q}</span><span class="de">/ ${a}</span></span>

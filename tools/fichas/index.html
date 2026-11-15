@@ -184,6 +184,24 @@
     background: linear-gradient(180deg, var(--panel-2), var(--panel)); border: 1px solid rgba(110,85,37,0.7);
   }
   .carta.adquirida { border-color: var(--brass-lo); }
+
+  /* Cores dos atributos, as mesmas das cartas físicas */
+  .atr { --atr: var(--brass); --atr-suave: rgba(201,163,90,0.14); }
+  .atr-corpo { --atr: #ef5350; --atr-suave: rgba(239,83,80,0.17); }
+  .atr-mente { --atr: #4f9dff; --atr-suave: rgba(79,157,255,0.17); }
+  .atr-foco { --atr: #f5c542; --atr-suave: rgba(245,197,66,0.15); }
+  .atr-espirito { --atr: #b07cff; --atr-suave: rgba(176,124,255,0.18); }
+  .atr-natureza { --atr: #4cc77f; --atr-suave: rgba(76,199,127,0.16); }
+  .atr-social { --atr: #f472b6; --atr-suave: rgba(244,114,182,0.17); }
+  .carta.atr {
+    position: relative; overflow: hidden; padding-top: 18px;
+    background: linear-gradient(180deg, var(--atr-suave), transparent 90px), linear-gradient(180deg, var(--panel-2), var(--panel));
+  }
+  .carta.atr::before { content: ""; position: absolute; inset: 0 0 auto 0; height: 5px; background: var(--atr); }
+  .carta.atr h3 { color: var(--text); }
+  .carta.atr h3::before { content: ""; display: inline-block; width: 10px; height: 10px; margin-right: 7px; border-radius: 50%; background: var(--atr); box-shadow: 0 0 8px var(--atr); vertical-align: 1px; }
+  .atr .tag.atributo { color: #0b1020; background: var(--atr); border-color: var(--atr); font-weight: 600; }
+  .deck-linha.atr { border-left: 4px solid var(--atr); }
   .carta.no-deck { border-color: var(--brass); box-shadow: inset 0 0 0 1px rgba(236,208,142,0.15); }
   .carta header { display: flex; align-items: baseline; justify-content: space-between; gap: 8px; }
   .carta h3 { margin: 0; font-family: var(--display); font-size: 16px; color: var(--brass-hi); line-height: 1.25; }

@@ -77,7 +77,7 @@ Quando um universo é encontrado, o mapa toca uma **animação com som**. Saltar
    - **Cartas adquiridas** do caminho é contado automaticamente;
    - **Mestre** é automático: o caminho vira Mestre ao chegar no nível 10;
    - ao escolher a raça, a ficha mostra a habilidade e a restrição raciais; ao escolher um caminho, mostra a intrínseca dele (quando houver). Toque no nome para ver a descrição.
-4. **Aba Catálogo**: mostra as cartas com custo, alcance, acerto, defesas, desequilíbrio, efeito e palavras-chave. Dá para buscar (nome, código ou qualquer texto) e filtrar por caminho, tipo, classe, atributo e situação. No personagem, o filtro começa em **Meus caminhos**. Cada carta tem dois controles:
+4. **Aba Catálogo**: cada carta tem a cor do seu atributo, como nas cartas físicas: **Corpo** vermelho, **Mente** azul, **Foco** amarelo, **Espírito** roxo, **Natureza** verde e **Social** rosa. O catálogo mostra as cartas com custo, alcance, acerto, defesas, desequilíbrio, efeito e palavras-chave. Dá para buscar (nome, código ou qualquer texto) e filtrar por caminho, tipo, classe, atributo e situação. No personagem, o filtro começa em **Meus caminhos**. Cada carta tem dois controles:
    - **Adquiridas**: compra uma cópia. Só é possível adquirir cartas dos caminhos que o personagem tem (ou cartas sem caminho). Se a carta tiver **custo de aquisição**, ele é descontado do **PC atual** do caminho, e a aquisição fica bloqueada sem PC suficiente. O **−** desfaz uma aquisição e devolve os PC;
    - **No deck**: põe ou tira cópias adquiridas do deck.
 5. **Aba Deck**: lista as cartas adquiridas por caminho, com "no deck / adquiridas", e os avisos de regra. Use **Só o deck** para ver apenas o que está no deck. Regras verificadas:
